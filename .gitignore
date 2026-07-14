@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+data/
+content/raw/
+content/prepared/
+content/catalog.json
+content/audio-timings/*.draft.json
+tmp/
+.DS_Store
+npm-debug.log*

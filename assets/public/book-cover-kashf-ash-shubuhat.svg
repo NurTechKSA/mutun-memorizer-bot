@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="960" viewBox="0 0 720 960" role="img" aria-label="Кашф аш-шубухат">
+  <title>Кашф аш-шубухат</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101316"/>
+      <stop offset="1" stop-color="#28333a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="30%" cy="12%" r="68%">
+      <stop offset="0" stop-color="#d6bd82" stop-opacity=".24"/>
+      <stop offset=".56" stop-color="#d6bd82" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#d6bd82" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .kicker { font: 600 24px -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif; fill: rgba(255,255,255,.58); letter-spacing: .8px; }
+      .title { font: 750 43px -apple-system, BlinkMacSystemFont, "SF Pro Display", Arial, sans-serif; fill: #fff; letter-spacing: -.8px; }
+      .meta { font: 650 25px -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif; fill: #d6bd82; }
+      .small { font: 600 22px -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif; fill: rgba(255,255,255,.5); }
+    </style>
+  </defs>
+  <rect width="720" height="960" rx="46" fill="url(#bg)"/>
+  <rect width="720" height="960" rx="46" fill="url(#glow)"/>
+  <path d="M60 86h600M60 874h600" stroke="rgba(255,255,255,.14)" stroke-width="2"/>
+  <path d="M88 734c78-76 170-114 276-114s198 38 276 114M88 780c78-76 170-114 276-114s198 38 276 114" fill="none" stroke="#d6bd82" stroke-opacity=".28" stroke-width="3"/>
+  <path d="M600 120c-48 0-88 40-88 88 48 0 88-40 88-88Zm-112 0c48 0 88 40 88 88-48 0-88-40-88-88Z" fill="none" stroke="#d6bd82" stroke-opacity=".36" stroke-width="4"/>
+  <g opacity=".22" stroke="#d6bd82" stroke-width="2" fill="none">
+    <path d="M96 600h528"/>
+    <path d="M120 624h480"/>
+    <path d="M144 648h432"/>
+  </g>
+  <text x="60" y="126" class="kicker">NURTECH HIFZ</text>
+  <text x="60" y="178" class="title">Кашф аш-шубухат</text>
+  <text x="60" y="812" class="meta">88 стр.</text>
+  <text x="60" y="844" class="small">матн для чтения и заучивания</text>
+</svg>

@@ -1,0 +1,231 @@
+{
+  "books": [
+    {
+      "id": "al-usul-ath-thalatha",
+      "titleRu": "Три основы",
+      "titleAr": "ثلاثة الأصول",
+      "author": "محمد بن عبد الوهاب",
+      "sourcePage": "https://a-alqasim.com/books/02mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0200Mutoon.pdf",
+        "filename": "level-02.pdf",
+        "pageRange": { "from": 13, "to": 51 },
+        "studyRange": { "from": 20, "to": 51 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0201ThalaathAlUsul_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "al-qawaid-al-arbaa",
+      "titleRu": "Четыре правила",
+      "titleAr": "القواعد الأربع",
+      "author": "محمد بن عبد الوهاب",
+      "sourcePage": "https://a-alqasim.com/books/02mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0200Mutoon.pdf",
+        "filename": "level-02.pdf",
+        "pageRange": { "from": 53, "to": 71 },
+        "studyRange": { "from": 61, "to": 71 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0202AlQawaidAlArba_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "nawaqid-al-islam",
+      "titleRu": "Навакид аль-Ислам",
+      "titleAr": "نواقض الإسلام",
+      "author": "محمد بن عبد الوهاب",
+      "sourcePage": "https://a-alqasim.com/books/02mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0200Mutoon.pdf",
+        "filename": "level-02.pdf",
+        "pageRange": { "from": 73, "to": 85 },
+        "studyRange": { "from": 80, "to": 85 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0203NawaaqidAlIslaam_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "al-arbaun-an-nawawiyyah",
+      "titleRu": "Сорок хадисов ан-Навави",
+      "titleAr": "الأربعون النووية",
+      "author": "يحيى بن شرف النووي",
+      "sourcePage": "https://a-alqasim.com/books/02mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0200Mutoon.pdf",
+        "filename": "level-02.pdf",
+        "pageRange": { "from": 87, "to": 166 },
+        "studyRange": { "from": 96, "to": 166 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdullahRowzy/0204AlArbaunAnNawawiyah_AbdullahRowzy.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "tuhfat-al-atfal",
+      "titleRu": "Тухфат аль-атфаль",
+      "titleAr": "تحفة الأطفال",
+      "author": "سليمان الجمزوري",
+      "sourcePage": "https://a-alqasim.com/books/03mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0300Mutoon.pdf",
+        "filename": "level-03.pdf",
+        "pageRange": { "from": 13, "to": 35 },
+        "studyRange": { "from": 23, "to": 35 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0301ThufatUlAtfaal_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "shurut-as-salah",
+      "titleRu": "Условия, столпы и обязанности молитвы",
+      "titleAr": "شروط الصلاة وأركانها وواجباتها",
+      "author": "محمد بن عبد الوهاب",
+      "sourcePage": "https://a-alqasim.com/books/03mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0300Mutoon.pdf",
+        "filename": "level-03.pdf",
+        "pageRange": { "from": 37, "to": 73 },
+        "studyRange": { "from": 45, "to": 73 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0302ShurutAsSalaah_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "kitab-at-tawhid",
+      "titleRu": "Китаб ат-таухид",
+      "titleAr": "كتاب التوحيد",
+      "author": "محمد بن عبد الوهاب",
+      "sourcePage": "https://a-alqasim.com/books/03mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0300Mutoon.pdf",
+        "filename": "level-03.pdf",
+        "pageRange": { "from": 75, "to": 234 },
+        "studyRange": { "from": 85, "to": 234 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulAzizAsSini/0303KitaabAtTawheed_AbdulAzizAsSini.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "al-bayquniyyah",
+      "titleRu": "Аль-Байкуния",
+      "titleAr": "البيقونية",
+      "author": "عمر بن محمد البيقوني",
+      "sourcePage": "https://a-alqasim.com/books/0400mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0400Mutoon.pdf",
+        "filename": "level-04.pdf",
+        "pageRange": { "from": 13, "to": 30 },
+        "studyRange": { "from": 23, "to": 30 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0401AlBayqooni_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "al-ilbiri",
+      "titleRu": "Касыда Абу Исхака аль-Ильбири",
+      "titleAr": "قصيدة أبي إسحاق الإلبيري",
+      "author": "أبو إسحاق الإلبيري",
+      "sourcePage": "https://a-alqasim.com/books/0400mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0400Mutoon.pdf",
+        "filename": "level-04.pdf",
+        "pageRange": { "from": 31, "to": 57 },
+        "studyRange": { "from": 39, "to": 57 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulHamidAbdullahGhraio/0402AlIlbiri_AbdulHamidAbdullahGhraio.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "al-ajurrumiyyah",
+      "titleRu": "Аль-Аджуррумия",
+      "titleAr": "المقدمة الآجرومية",
+      "author": "محمد بن محمد بن آجروم",
+      "sourcePage": "https://a-alqasim.com/books/0400mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0400Mutoon.pdf",
+        "filename": "level-04.pdf",
+        "pageRange": { "from": 59, "to": 111 },
+        "studyRange": { "from": 67, "to": 111 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/YusufAlAynaaty/0403AlAajurrumiyyah_YusufAlAynaaty.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "al-aqidah-al-wasitiyyah",
+      "titleRu": "Аль-Акыда аль-Васития",
+      "titleAr": "العقيدة الواسطية",
+      "author": "ابن تيمية",
+      "sourcePage": "https://a-alqasim.com/books/0400mutoon/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/0400Mutoon.pdf",
+        "filename": "level-04.pdf",
+        "pageRange": { "from": 113, "to": 212 },
+        "studyRange": { "from": 121, "to": 212 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulAzizAsSini/0404AlWaasitiyyah_AbdulAzizAsSini.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    },
+    {
+      "id": "kashf-ash-shubuhat",
+      "titleRu": "Кашф аш-шубухат",
+      "titleAr": "كشف الشبهات",
+      "author": "محمد بن عبد الوهاب",
+      "sourcePage": "https://a-alqasim.com/books/080401kashf/",
+      "rightsNote": "متون طالب العلم, جمع وترتيب وتحقيق د. عبد المحسن بن محمد القاسم. PDF and reading are from the official a-alqasim.com site.",
+      "pdf": {
+        "url": "https://files.a-alqasim.com/books/mutoon/080401Kashf.pdf",
+        "filename": "matn.pdf",
+        "studyRange": { "from": 17, "to": 104 }
+      },
+      "audio": {
+        "url": "https://files.a-alqasim.com/audio/Mutoon/AbdulGhaniSaadiqAlFaqeeh/0804Kashf_AbdulGhaniSaadiqAlFaqeeh.mp3",
+        "filename": "matn.mp3",
+        "scope": "book"
+      }
+    }
+  ]
+}

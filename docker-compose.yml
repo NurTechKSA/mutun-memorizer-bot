@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    container_name: hifz-bot
+    env_file: ./.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PUBLIC_URL=https://hifz.nurtech.dev
+      - VIRTUAL_HOST=hifz.nurtech.dev
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=hifz.nurtech.dev
+      - LETSENCRYPT_EMAIL=angularmentoring@gmail.com
+    volumes:
+      - hifz_data:/app/data
+    networks: [proxy]
+    restart: always
+
+networks:
+  proxy:
+    external: true
+    name: webproxy
+
+volumes:
+  hifz_data:
