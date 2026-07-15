@@ -64,6 +64,10 @@ for (const book of sources.books) {
     const imagePath = path.join(imageDir, image);
     const sourcePageNumber = renderFrom ? renderFrom + index : index + 1;
     const inkWeight = await pageInkWeight(imagePath);
+    if (inkWeight === 0) {
+      console.log(`skipped blank page ${book.id}: PDF ${sourcePageNumber}`);
+      continue;
+    }
     pageInfos.push({ image, imagePath, sourcePageNumber, inkWeight });
   }
 
@@ -342,7 +346,7 @@ async function pageInkWeight(imagePath: string): Promise<number> {
     }
   }
 
-  return Math.max(ink, 1);
+  return ink;
 }
 
 function formatSeconds(seconds: number): string {

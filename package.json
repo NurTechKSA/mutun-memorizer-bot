@@ -14,6 +14,7 @@
     "content:text:extract": "node scripts/extract-page-text.mjs",
     "audio:template": "tsx scripts/create-audio-timing-template.ts",
     "audio:report": "tsx scripts/audit-audio-alignment.ts",
+    "state:migrate-trimmed-pages": "tsx scripts/migrate-trimmed-page-indexes.ts",
     "updatedesk:init": "node tools/updatedesk-init.mjs",
     "updatedesk:note": "node tools/updatedesk-note.mjs"
   },
