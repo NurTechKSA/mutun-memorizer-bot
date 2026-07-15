@@ -28,6 +28,7 @@ let missingAudio = 0;
 for (const book of catalog.books) {
   const statuses = new Map<string, number>();
   const chunkDurations: number[] = [];
+  const suspicious: string[] = [];
 
   for (const chunk of book.chunks) {
     totalChunks += 1;
@@ -43,6 +44,9 @@ for (const book of catalog.books) {
 
     const duration = await audioDurationSeconds(path.join(contentDir, chunk.audioPath));
     chunkDurations.push(duration);
+    if (duration < 5 || duration > 180) {
+      suspicious.push(`page ${chunk.index + 1} / PDF ${chunk.sourcePageNumber ?? "?"}: ${duration.toFixed(1)}s`);
+    }
   }
 
   const min = chunkDurations.length ? Math.min(...chunkDurations) : 0;
@@ -57,6 +61,7 @@ for (const book of catalog.books) {
     `- Pages: ${book.chunks.length}`,
     `- Audio status: ${formatStatuses(statuses)}`,
     `- Chunk duration: min ${min.toFixed(1)}s, avg ${avg.toFixed(1)}s, max ${max.toFixed(1)}s`,
+    `- Suspicious chunks: ${suspicious.length ? suspicious.join("; ") : "none"}`,
     ""
   );
 }

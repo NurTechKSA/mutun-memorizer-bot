@@ -39,6 +39,7 @@ export async function sendDuePortions(bot: Telegraf, config: AppConfig, store: J
     try {
       await sendLessonForSubscription(bot, config, store, subscription, { scheduledDate: today });
     } catch (error) {
+      if (await deactivateBlockedChat(store, subscription.chatId, error)) continue;
       console.error(`Failed to send daily lesson to ${subscription.chatId}`, error);
     }
   }
@@ -72,6 +73,7 @@ export async function sendStudyReminders(bot: Telegraf, config: AppConfig, store
       );
       await store.recordReminderSent(chatId, today);
     } catch (error) {
+      if (await deactivateBlockedChat(store, chatId, error)) continue;
       console.error(`Failed to send study reminder to ${chatId}`, error);
     }
   }
@@ -377,4 +379,17 @@ function modeLabel(mode: Subscription["mode"]): string {
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("ru-RU", { dateStyle: "long" }).format(new Date(value));
+}
+
+async function deactivateBlockedChat(store: JsonStore, chatId: number, error: unknown): Promise<boolean> {
+  if (!isTelegramBlockedError(error)) return false;
+
+  const count = await store.deactivateChat(chatId);
+  console.warn(`Telegram chat ${chatId} blocked the bot. Deactivated ${count} active subscription(s).`);
+  return true;
+}
+
+function isTelegramBlockedError(error: unknown): boolean {
+  const response = (error as { response?: { error_code?: number; description?: string } }).response;
+  return response?.error_code === 403 && /bot was blocked by the user/i.test(response.description ?? "");
 }

@@ -302,6 +302,27 @@ export class JsonStore {
     return subscription;
   }
 
+  async deactivateChat(chatId: number): Promise<number> {
+    const state = await this.read();
+    const now = new Date().toISOString();
+    let changed = 0;
+
+    for (const subscription of Object.values(state.subscriptions)) {
+      if (subscription.chatId !== chatId || !subscription.active) continue;
+      subscription.active = false;
+      subscription.pausedUntil = undefined;
+      subscription.updatedAt = now;
+      changed += 1;
+    }
+
+    if (changed > 0) {
+      delete state.activeBooks[String(chatId)];
+      await this.write(state);
+    }
+
+    return changed;
+  }
+
   async recordLessonSent(
     chatId: number,
     bookId: string,
@@ -416,7 +437,7 @@ function normalizeState(
     const subscription = normalizeSubscription(rawSubscription);
     const key = rawKey.includes(":") ? rawKey : subscriptionKey(subscription.chatId, subscription.bookId);
     subscriptions[key] = subscription;
-    activeBooks[String(subscription.chatId)] ??= subscription.bookId;
+    if (subscription.active) activeBooks[String(subscription.chatId)] ??= subscription.bookId;
   }
 
   for (const [rawKey, rawSettings] of Object.entries(input.userSettings ?? {})) {
