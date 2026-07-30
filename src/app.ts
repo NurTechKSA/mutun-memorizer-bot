@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
-import { findBook, readCatalog } from "./content.js";
+import { findBook, isBookReadyForLessons, readCatalog } from "./content.js";
 import type { AppConfig } from "./config.js";
 import { JsonStore } from "./storage.js";
 import type { ActivityEvent, CatalogBook, LessonFeedback, Pace, StudyMode, Subscription, UserSettings } from "./types.js";
@@ -15,6 +15,8 @@ const qasimMutoonBookIds = new Set([
   "al-arbaun-an-nawawiyyah",
   "tuhfat-al-atfal",
   "shurut-as-salah",
+  "al-usul-as-sitta",
+  "shurut-la-ilaha-illa-llah",
   "kitab-at-tawhid",
   "al-bayquniyyah",
   "al-ilbiri",
@@ -76,6 +78,12 @@ export async function handleAppRequest(
 
   const activeMatch = url.pathname.match(/^\/api\/app\/books\/([^/]+)\/active$/);
   if (request.method === "POST" && activeMatch) {
+    const catalog = await readCatalog(config.contentDir);
+    const book = findBook(catalog, activeMatch[1]);
+    if (!book || !qasimMutoonBookIds.has(book.id) || !isBookReadyForLessons(book)) {
+      sendJson(response, 409, { ok: false, error: "Для этой книги пока нет проверенной нарезки." });
+      return true;
+    }
     const subscription = await store.setActiveBook(auth.chatId, activeMatch[1]);
     sendJson(response, subscription ? 200 : 404, subscription ? { ok: true } : { ok: false, error: "Книга не найдена." });
     return true;
@@ -215,10 +223,14 @@ async function startBook(
   const catalog = await readCatalog(config.contentDir);
   const book = findBook(catalog, bookId);
   if (!book) return { status: 404, payload: { ok: false, error: "Книга не найдена." } };
+  if (!qasimMutoonBookIds.has(book.id) || !isBookReadyForLessons(book)) {
+    return { status: 409, payload: { ok: false, error: "Для этой книги пока нет проверенной нарезки. Добавим ее после проверки аудио." } };
+  }
 
   const pace = isPace(body.pace) ? body.pace : "slow";
   const existing = await store.getSubscription(chatId, bookId);
-  const activeCount = (await store.listSubscriptions(chatId)).filter((item) => item.active).length;
+  const readyBookIds = new Set(catalog.books.filter((item) => qasimMutoonBookIds.has(item.id) && isBookReadyForLessons(item)).map((item) => item.id));
+  const activeCount = (await store.listSubscriptions(chatId)).filter((item) => item.active && readyBookIds.has(item.bookId)).length;
 
   if ((!existing || !existing.active) && activeCount >= maxActiveBooks) {
     return { status: 409, payload: { ok: false, error: "Можно учить максимум 2 книги одновременно." } };
@@ -237,13 +249,19 @@ async function resumeBook(
   const existing = await store.getSubscription(chatId, bookId);
   if (!existing) return { status: 404, payload: { ok: false, error: "Книга не найдена." } };
 
-  const activeCount = (await store.listSubscriptions(chatId)).filter((item) => item.active).length;
+  const catalog = await readCatalog(config.contentDir);
+  const readyBookIds = new Set(catalog.books.filter((item) => qasimMutoonBookIds.has(item.id) && isBookReadyForLessons(item)).map((item) => item.id));
+  const activeCount = (await store.listSubscriptions(chatId)).filter((item) => item.active && readyBookIds.has(item.bookId)).length;
   if (!existing.active && activeCount >= maxActiveBooks) {
     return { status: 409, payload: { ok: false, error: "Сначала поставь одну активную книгу на паузу." } };
   }
 
+  const book = findBook(catalog, bookId);
+  if (!book || !qasimMutoonBookIds.has(book.id) || !isBookReadyForLessons(book)) {
+    return { status: 409, payload: { ok: false, error: "Для этой книги пока нет проверенной нарезки." } };
+  }
+
   const subscription = await store.resumeBook(chatId, bookId);
-  const catalog = await readCatalog(config.contentDir);
   return { status: 200, payload: { ok: true, subscription: serializeSubscription(findBook(catalog, bookId), subscription!) } };
 }
 
@@ -279,7 +297,10 @@ async function nextLesson(
   const catalog = await readCatalog(config.contentDir);
   const book = findBook(catalog, bookId);
   const chunk = book?.chunks[subscription.nextChunkIndex];
-  if (!book || !chunk) return { status: 409, payload: { ok: false, error: "Новые страницы закончились." } };
+  if (!book || !chunk) return { status: 409, payload: { ok: false, error: "Новые фрагменты закончились." } };
+  if (!qasimMutoonBookIds.has(book.id) || !isBookReadyForLessons(book)) {
+    return { status: 409, payload: { ok: false, error: "Для этой книги пока нет проверенной нарезки." } };
+  }
 
   await store.recordLessonSent(chatId, bookId, chunk.index + 1, [chunk.index]);
   const updated = await store.getSubscription(chatId, bookId);
@@ -307,7 +328,10 @@ async function lessonFromPage(
   const catalog = await readCatalog(config.contentDir);
   const book = findBook(catalog, bookId);
   const chunk = book?.chunks[pageIndex];
-  if (!book || !chunk) return { status: 404, payload: { ok: false, error: "Страница не найдена." } };
+  if (!book || !chunk) return { status: 404, payload: { ok: false, error: "Фрагмент не найден." } };
+  if (!qasimMutoonBookIds.has(book.id) || !isBookReadyForLessons(book)) {
+    return { status: 409, payload: { ok: false, error: "Для этой книги пока нет проверенной нарезки." } };
+  }
 
   await store.recordLessonSent(chatId, bookId, Math.max(subscription.nextChunkIndex, chunk.index + 1), [chunk.index]);
   const updated = await store.getSubscription(chatId, bookId);
@@ -323,13 +347,14 @@ async function lessonFromPage(
 
 async function buildAppState(config: AppConfig, store: JsonStore, auth: AuthUser): Promise<Record<string, unknown>> {
   const catalog = await readCatalog(config.contentDir);
-  const qasimBooks = catalog.books.filter((book) => qasimMutoonBookIds.has(book.id));
+  const qasimBooks = catalog.books.filter((book) => qasimMutoonBookIds.has(book.id) && isBookReadyForLessons(book));
+  const availableBookIds = new Set(qasimBooks.map((book) => book.id));
   const state = await store.read();
   const storedActiveBookId = state.activeBooks[String(auth.chatId)];
-  const activeBookId = storedActiveBookId && qasimMutoonBookIds.has(storedActiveBookId) ? storedActiveBookId : undefined;
+  const activeBookId = storedActiveBookId && availableBookIds.has(storedActiveBookId) ? storedActiveBookId : undefined;
   const rawSubscriptions = await store.listSubscriptions(auth.chatId);
   const subscriptions = rawSubscriptions
-    .filter((subscription) => qasimMutoonBookIds.has(subscription.bookId))
+    .filter((subscription) => availableBookIds.has(subscription.bookId))
     .map((subscription) => serializeSubscription(findBook(catalog, subscription.bookId), subscription));
   const settings = await store.getUserSettings(auth.chatId);
   const activityEvents = await store.listActivityEvents(auth.chatId);
@@ -340,8 +365,8 @@ async function buildAppState(config: AppConfig, store: JsonStore, auth: AuthUser
     activeBookId,
     books: qasimBooks.map((book) => serializeBook(config.publicUrl, book)),
     subscriptions,
-    schedule: buildSchedule(config.publicUrl, qasimBooks, rawSubscriptions.filter((subscription) => qasimMutoonBookIds.has(subscription.bookId))),
-    activity: buildActivity(config.publicUrl, qasimBooks, rawSubscriptions.filter((subscription) => qasimMutoonBookIds.has(subscription.bookId)), activityEvents, settings)
+    schedule: buildSchedule(config.publicUrl, qasimBooks, rawSubscriptions.filter((subscription) => availableBookIds.has(subscription.bookId))),
+    activity: buildActivity(config.publicUrl, qasimBooks, rawSubscriptions.filter((subscription) => availableBookIds.has(subscription.bookId)), activityEvents, settings)
   };
 }
 
@@ -370,7 +395,7 @@ function buildActivity(
       lessonSent: lessonSentToday,
       shouldRemind: activeCount > 0 && !studiedToday,
       text: activeCount > 0 && !studiedToday
-        ? "Сегодня еще не отмечал результат. Открой текущую страницу и нажми «Выучил», «Сложно» или «Повторить завтра»."
+        ? "Сегодня еще не отмечал результат. Открой текущий фрагмент и нажми «Выучил», «Сложно» или «Повторить завтра»."
         : "Сегодня занятие отмечено."
     },
     weeklyGoal: {
@@ -442,8 +467,8 @@ function buildWeakPages(
       count: stats?.count ?? 1,
       lastDate: stats?.lastDate,
       imageUrl: `${publicUrl}/content/${chunk.imagePath}`,
-      audioUrl: chunk.audioPath ? `${publicUrl}/content/${chunk.audioPath}` : book.audioPath ? `${publicUrl}/content/${book.audioPath}` : undefined,
-      audioScope: chunk.audioPath ? "page" : book.audioPath ? "book" : undefined,
+      audioUrl: verifiedChunkAudioUrl(publicUrl, book, chunk),
+      audioScope: verifiedChunkAudioUrl(publicUrl, book, chunk) ? "page" : undefined,
       audioStatus: chunk.audioStatus ?? book.audioStatus
     });
   }
@@ -469,7 +494,7 @@ function serializeBook(publicUrl: string, book: CatalogBook): Record<string, unk
       title: chunk.title,
       sourcePageNumber: chunk.sourcePageNumber,
       imageUrl: `${publicUrl}/content/${chunk.imagePath}`,
-      audioUrl: chunk.audioPath ? `${publicUrl}/content/${chunk.audioPath}` : undefined,
+      audioUrl: verifiedChunkAudioUrl(publicUrl, book, chunk),
       audioStatus: chunk.audioStatus ?? book.audioStatus,
       textUrl: chunk.textPath ? `${publicUrl}/content/${chunk.textPath}` : undefined
     }))
@@ -509,12 +534,18 @@ function serializeLesson(publicUrl: string, book: CatalogBook, chunk: CatalogBoo
     page: chunk.index + 1,
     total: book.chunks.length,
     imageUrl: `${publicUrl}/content/${chunk.imagePath}`,
-    audioUrl: chunk.audioPath ? `${publicUrl}/content/${chunk.audioPath}` : book.audioPath ? `${publicUrl}/content/${book.audioPath}` : undefined,
-    audioScope: chunk.audioPath ? "page" : book.audioPath ? "book" : undefined,
+    audioUrl: verifiedChunkAudioUrl(publicUrl, book, chunk),
+    audioScope: verifiedChunkAudioUrl(publicUrl, book, chunk) ? "page" : undefined,
     audioStatus: chunk.audioStatus ?? book.audioStatus,
     fullPdfUrl: book.fullPdfPath ? `${publicUrl}/content/${book.fullPdfPath}` : undefined,
     textUrl: chunk.textPath ? `${publicUrl}/content/${chunk.textPath}` : undefined
   };
+}
+
+function verifiedChunkAudioUrl(publicUrl: string, book: CatalogBook, chunk: CatalogBook["chunks"][number]): string | undefined {
+  if ((chunk.audioStatus ?? book.audioStatus) !== "verified") return undefined;
+  if (!chunk.audioPath) return undefined;
+  return `${publicUrl}/content/${chunk.audioPath}`;
 }
 
 function buildSchedule(publicUrl: string, books: CatalogBook[], subscriptions: Subscription[]): Record<string, unknown>[] {
@@ -538,7 +569,7 @@ function buildSchedule(publicUrl: string, books: CatalogBook[], subscriptions: S
         dueDate: item.dueDate,
         bookId: subscription.bookId,
         titleRu: book?.titleRu ?? subscription.bookId,
-        label: `Повторить стр. ${item.chunkIndex + 1}`,
+      label: `Повторить фрагмент ${item.chunkIndex + 1}`,
         page: item.chunkIndex + 1,
         imageUrl: book && chunk ? `${publicUrl}/content/${chunk.imagePath}` : undefined
       };
@@ -842,16 +873,16 @@ function renderApp(publicUrl: string): string {
 
       <section class="hero panel">
         <h1>Твой учебный день</h1>
-        <p id="heroText">Выбери одну или две книги. Каждый день получай новую страницу с аудио, отмечай результат и повторяй по расписанию.</p>
+        <p id="heroText">Выбери одну или две книги. Каждый день получай новый фрагмент с аудио, отмечай результат и повторяй по расписанию.</p>
         <div class="stats">
           <div class="stat"><b id="statBooks">0</b><span>активные книги</span></div>
-          <div class="stat"><b id="statPages">0</b><span>страницы пройдены</span></div>
+          <div class="stat"><b id="statPages">0</b><span>фрагменты пройдены</span></div>
           <div class="stat"><b id="statReviews">0</b><span>повторения</span></div>
         </div>
         <div class="guide">
           <div class="guide-step"><i>1</i><div><b>Добавь книгу</b><span>На вкладке «Книги» выбери матн и темп.</span></div></div>
-          <div class="guide-step"><i>2</i><div><b>Открой полный текст</b><span>Кнопка «Читать полный текст» показывает все страницы.</span></div></div>
-          <div class="guide-step"><i>3</i><div><b>Учи страницу</b><span>Нажми «Получить следующую страницу», прочитай и послушай аудио.</span></div></div>
+          <div class="guide-step"><i>2</i><div><b>Открой полный текст</b><span>Кнопка «Читать полный текст» показывает весь матн.</span></div></div>
+          <div class="guide-step"><i>3</i><div><b>Учи фрагмент</b><span>Нажми «Получить следующий фрагмент», прочитай и послушай аудио.</span></div></div>
           <div class="guide-step"><i>4</i><div><b>Отметь результат</b><span>Бот сам поставит повторение в план.</span></div></div>
         </div>
       </section>
@@ -866,12 +897,12 @@ function renderApp(publicUrl: string): string {
         <div class="grid two">
           <div class="panel" style="padding:14px">
             <h2>Сегодня</h2>
-            <p>Здесь книги, которые ты сейчас учишь. Нажми «Получить следующую страницу», когда готов заниматься.</p>
+            <p>Здесь книги, которые ты сейчас учишь. Нажми «Получить следующий фрагмент», когда готов заниматься.</p>
             <div id="todayBooks" class="book-list"></div>
           </div>
           <div id="lessonBox" class="panel empty">
-            <h2>Страница появится здесь</h2>
-            <p>Выбери книгу и нажми «Получить следующую страницу».</p>
+            <h2>Фрагмент появится здесь</h2>
+            <p>Выбери книгу и нажми «Получить следующий фрагмент».</p>
           </div>
         </div>
         <div class="grid two">
@@ -886,8 +917,8 @@ function renderApp(publicUrl: string): string {
           </div>
         </div>
         <div class="panel analytics-card">
-          <h2>Слабые страницы</h2>
-          <p>Сюда попадают страницы, которые ты отмечал как «Сложно».</p>
+          <h2>Слабые фрагменты</h2>
+          <p>Сюда попадают фрагменты, которые ты отмечал как «Сложно».</p>
           <div id="weakPages" class="book-list"></div>
         </div>
       </section>
@@ -895,7 +926,7 @@ function renderApp(publicUrl: string): string {
       <section class="view" id="booksView">
         <div class="panel" style="padding:14px">
           <h2>Книги, которые ты выбрал</h2>
-          <p>В «Сейчас учишь» приходят ежедневные страницы. Книги «На паузе» не приходят в задания, но их можно читать.</p>
+          <p>В «Сейчас учишь» приходят ежедневные фрагменты. Книги «На паузе» не приходят в задания, но их можно читать.</p>
           <div id="myBooks" class="book-list" style="margin-top:12px"></div>
         </div>
         <div class="panel" style="padding:14px">
@@ -908,7 +939,7 @@ function renderApp(publicUrl: string): string {
       <section class="view" id="scheduleView">
         <div class="panel" style="padding:14px">
           <h2>Расписание</h2>
-          <p>Новые страницы приходят каждый день в выбранное время. Повторения появляются после отметок «Выучил», «Сложно» или «Повторить завтра».</p>
+          <p>Новые фрагменты приходят каждый день в выбранное время. Повторения появляются после отметок «Выучил», «Сложно» или «Повторить завтра».</p>
           <div id="scheduleList" class="schedule"></div>
         </div>
       </section>
@@ -943,7 +974,7 @@ function renderApp(publicUrl: string): string {
     <section class="reader" id="reader">
       <div class="reader-shell">
         <div class="reader-bar panel">
-          <div><b id="readerTitle">Книга</b><span id="readerMeta">Страница 1</span></div>
+          <div><b id="readerTitle">Книга</b><span id="readerMeta">Фрагмент 1</span></div>
           <button class="btn secondary" id="closeReader">Закрыть</button>
         </div>
         <div class="reader-page panel" id="readerPage"></div>
@@ -951,7 +982,7 @@ function renderApp(publicUrl: string): string {
           <div class="actions">
             <button class="btn secondary" id="readerPrev">Назад</button>
             <button class="btn" id="readerNext">Вперед</button>
-            <button class="btn warn" id="readerMemorize">Учить эту страницу</button>
+            <button class="btn warn" id="readerMemorize">Учить этот фрагмент</button>
           </div>
           <audio id="readerAudio" controls></audio>
           <div class="page-strip" id="readerStrip"></div>
@@ -978,7 +1009,7 @@ function renderApp(publicUrl: string): string {
       var lesson = null;
       var readerBookId = null;
       var readerPageIndex = 0;
-      var paceLabels = { slow: "1 стр./день", normal: "2 стр./день", fast: "3 стр./день" };
+      var paceLabels = { slow: "1 фрагмент/день", normal: "2 фрагмента/день", fast: "3 фрагмента/день" };
       var paceValues = { slow: 1, normal: 2, fast: 3 };
       var modeLabels = { read_listen: "текст и аудио", read: "только текст", listen: "только аудио", review: "только повторение" };
 
@@ -1056,15 +1087,15 @@ function renderApp(publicUrl: string): string {
         el.className = "book panel";
         var status = sub.active ? "Учишь сейчас" : "На паузе";
         var nextText = sub.active
-          ? (sub.nextPreview ? "Следующая для заучивания: стр. " + (sub.nextPreview.index + 1) + " из " + sub.totalChunks : "Все страницы пройдены")
+          ? (sub.nextPreview ? "Следующий для заучивания: фрагмент " + (sub.nextPreview.index + 1) + " из " + sub.totalChunks : "Все фрагменты пройдены")
           : "Задания по этой книге сейчас не приходят";
         var nextHelp = sub.active
-          ? "Нажми «Получить следующую страницу», чтобы открыть текст и аудио для заучивания."
-          : "Нажми «Снова учить эту книгу», если хочешь получать по ней ежедневные страницы.";
+          ? "Нажми «Получить следующий фрагмент», чтобы открыть текст и аудио для заучивания."
+          : "Нажми «Снова учить эту книгу», если хочешь получать по ней ежедневные фрагменты.";
         el.innerHTML =
           '<div class="book-head"><div class="book-title"><b>' + esc(sub.titleRu) + '</b><span>' + esc(sub.titleAr || "") + '</span></div><span class="chip">' + status + '</span></div>' +
           '<div class="progress"><i style="width:' + sub.progressPercent + '%"></i></div>' +
-          '<div class="book-meta"><span class="mini">' + sub.nextChunkIndex + '/' + sub.totalChunks + ' страниц</span><span class="mini">' + paceLabels[sub.pace] + '</span><span class="mini">' + pad(sub.dailyHour) + ':00</span><span class="mini">' + modeLabels[sub.mode] + '</span></div>' +
+          '<div class="book-meta"><span class="mini">' + sub.nextChunkIndex + '/' + sub.totalChunks + ' фрагментов</span><span class="mini">' + paceLabels[sub.pace] + '</span><span class="mini">' + pad(sub.dailyHour) + ':00</span><span class="mini">' + modeLabels[sub.mode] + '</span></div>' +
           '<div class="next-box"><b>' + esc(nextText) + '</b><span>' + esc(nextHelp) + '</span></div>';
         var actions = document.createElement("div");
         actions.className = "actions";
@@ -1086,7 +1117,7 @@ function renderApp(publicUrl: string): string {
         }
         active.forEach(function(sub) {
           box.appendChild(bookCard(sub, function(actions) {
-            actions.appendChild(button("Получить следующую страницу", "btn", function() { nextPage(sub.bookId); }));
+            actions.appendChild(button("Получить следующий фрагмент", "btn", function() { nextPage(sub.bookId); }));
             actions.appendChild(button("Читать полный текст", "btn secondary", function() { openReader(sub.bookId, Math.max(0, sub.nextChunkIndex)); }));
             actions.appendChild(button("Посмотреть план повторений", "btn secondary", function() { switchView("scheduleView"); }));
           }));
@@ -1112,7 +1143,7 @@ function renderApp(publicUrl: string): string {
           }));
         });
         if (paused.length > 0) {
-          mine.insertAdjacentHTML("beforeend", '<h3>На паузе</h3><div class="notice soft">По этим книгам ежедневные страницы не приходят. Их можно читать или снова добавить в занятия.</div>');
+          mine.insertAdjacentHTML("beforeend", '<h3>На паузе</h3><div class="notice soft">По этим книгам ежедневные фрагменты не приходят. Их можно читать или снова добавить в занятия.</div>');
         }
         paused.forEach(function(sub) {
           mine.appendChild(bookCard(sub, function(actions) {
@@ -1131,7 +1162,7 @@ function renderApp(publicUrl: string): string {
           var existing = state.subscriptions.find(function(item) { return item.bookId === book.id; });
           var el = document.createElement("article");
           el.className = "book panel";
-          el.innerHTML = '<div class="book-title"><b>' + esc(book.titleRu) + '</b><span>' + esc(book.titleAr) + '</span></div><div class="book-meta"><span class="mini">' + book.totalChunks + ' страниц</span><span class="mini">полный текст</span><span class="mini">аудио по страницам</span></div><p style="margin-top:10px">Можно сначала прочитать книгу целиком, а потом добавить ее в ежедневные занятия.</p>';
+          el.innerHTML = '<div class="book-title"><b>' + esc(book.titleRu) + '</b><span>' + esc(book.titleAr) + '</span></div><div class="book-meta"><span class="mini">' + book.totalChunks + ' фрагментов</span><span class="mini">полный текст</span><span class="mini">проверенное аудио</span></div><p style="margin-top:10px">Можно сначала прочитать книгу целиком, а потом добавить ее в ежедневные занятия.</p>';
           var actions = document.createElement("div");
           actions.className = "actions";
           actions.appendChild(button("Читать полный текст", "btn secondary", function() { openReader(book.id, 0); }));
@@ -1148,7 +1179,7 @@ function renderApp(publicUrl: string): string {
               disabledButton.disabled = true;
               actions.appendChild(disabledButton);
             } else {
-              [["slow", "Добавить: 1 стр./день"], ["normal", "Добавить: 2 стр./день"], ["fast", "Добавить: 3 стр./день"]].forEach(function(pace) {
+              [["slow", "Добавить: 1 фрагмент/день"], ["normal", "Добавить: 2 фрагмента/день"], ["fast", "Добавить: 3 фрагмента/день"]].forEach(function(pace) {
                 actions.appendChild(button(pace[1], pace[0] === "slow" ? "btn" : "btn secondary", function() { startBook(book.id, pace[0]); }));
               });
             }
@@ -1162,7 +1193,7 @@ function renderApp(publicUrl: string): string {
         var box = document.getElementById("scheduleList");
         box.innerHTML = "";
         if (state.schedule.length === 0) {
-          box.innerHTML = '<div class="notice">Пока нет расписания. Получи страницу и отметь результат.</div>';
+          box.innerHTML = '<div class="notice">Пока нет расписания. Получи фрагмент и отметь результат.</div>';
           return;
         }
         state.schedule.forEach(function(item) {
@@ -1193,7 +1224,7 @@ function renderApp(publicUrl: string): string {
           reviews.innerHTML = '<div class="notice">Повторения появятся после отметок «Выучил», «Сложно» или «Повторить завтра».</div>';
           history.innerHTML = '<div class="notice">История появится после первого занятия.</div>';
           calendar.innerHTML = "";
-          weakPages.innerHTML = '<div class="notice">Слабые страницы появятся после отметки «Сложно».</div>';
+          weakPages.innerHTML = '<div class="notice">Слабые фрагменты появятся после отметки «Сложно».</div>';
           return;
         }
 
@@ -1211,19 +1242,19 @@ function renderApp(publicUrl: string): string {
         var workloadClass = workload <= 3 ? "good" : workload <= 6 ? "warn" : "bad";
         var workloadText = workload <= 3 ? "спокойная нагрузка" : workload <= 6 ? "средняя нагрузка" : "лучше снизить темп";
 
-        summary.appendChild(metric("Сегодня", workload + " задач", newPagesPerDay + " новых стр. + " + dueToday + " повтор.", workloadClass));
-        summary.appendChild(metric("Прогресс", progressPercent + "%", sentPages + " из " + totalPages + " страниц уже выданы", "good"));
-        summary.appendChild(metric("Цель недели", activity.weeklyGoal.learned + "/" + activity.weeklyGoal.pages, "осталось " + activity.weeklyGoal.remaining + " стр.", activity.weeklyGoal.percent >= 100 ? "good" : "warn"));
-        summary.appendChild(metric("Сложно", hardPages, "страниц отмечено сложными", hardPages > 0 ? "warn" : ""));
+        summary.appendChild(metric("Сегодня", workload + " задач", newPagesPerDay + " новых фрагм. + " + dueToday + " повтор.", workloadClass));
+        summary.appendChild(metric("Прогресс", progressPercent + "%", sentPages + " из " + totalPages + " фрагментов уже выданы", "good"));
+        summary.appendChild(metric("Цель недели", activity.weeklyGoal.learned + "/" + activity.weeklyGoal.pages, "осталось " + activity.weeklyGoal.remaining + " фрагм.", activity.weeklyGoal.percent >= 100 ? "good" : "warn"));
+        summary.appendChild(metric("Сложно", hardPages, "фрагментов отмечено сложными", hardPages > 0 ? "warn" : ""));
         summary.appendChild(weeklyGoalControl(activity.weeklyGoal.pages));
 
         if (activity.today.shouldRemind) {
           reviews.appendChild(plainInsight(activity.today.text));
         }
 
-        reviews.appendChild(plainInsight("Нагрузка сейчас: " + workloadText + ". Новые страницы считаются по темпу активных книг, повторения - по расписанию."));
+        reviews.appendChild(plainInsight("Нагрузка сейчас: " + workloadText + ". Новые фрагменты считаются по темпу активных книг, повторения - по расписанию."));
         if (reviewTotal === 0) {
-          reviews.appendChild(plainNotice("Пока нет страниц в повторении. Они появятся после отметки результата."));
+          reviews.appendChild(plainNotice("Пока нет фрагментов в повторении. Они появятся после отметки результата."));
         } else {
           var dueItems = state.schedule.filter(function(item) { return item.type === "review"; }).slice(0, 8);
           reviews.appendChild(metric("Всего повторений", reviewTotal, dueToday + " нужно повторить сегодня", dueToday > 0 ? "warn" : "good"));
@@ -1246,7 +1277,7 @@ function renderApp(publicUrl: string): string {
           calendar.appendChild(habitDay(day));
         });
         if (activity.weakPages.length === 0) {
-          weakPages.innerHTML = '<div class="notice soft">Пока нет слабых страниц. Если страница дается трудно, отметь «Сложно».</div>';
+          weakPages.innerHTML = '<div class="notice soft">Пока нет слабых фрагментов. Если фрагмент дается трудно, отметь «Сложно».</div>';
         } else {
           activity.weakPages.forEach(function(item) {
             weakPages.appendChild(weakPageCard(item));
@@ -1267,10 +1298,10 @@ function renderApp(publicUrl: string): string {
         var accuracy = sent === 0 ? 0 : Math.round((sub.completedCount / sent) * 100);
         el.innerHTML =
           '<div class="book-head"><div class="book-title"><b>' + esc(sub.titleRu) + '</b><span>' + (sub.active ? "Учишь сейчас" : "На паузе") + '</span></div><span class="chip">' + sub.progressPercent + '%</span></div>' +
-          '<div class="bar-row"><div class="bar-label"><span>Выдано страниц</span><b>' + sent + '/' + sub.totalChunks + '</b></div><div class="progress"><i style="width:' + sub.progressPercent + '%"></i></div></div>' +
+          '<div class="bar-row"><div class="bar-label"><span>Выдано фрагментов</span><b>' + sent + '/' + sub.totalChunks + '</b></div><div class="progress"><i style="width:' + sub.progressPercent + '%"></i></div></div>' +
           '<div class="analytics-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">' +
           '<div class="metric"><b>' + sub.completedCount + '</b><span>отмечено «Выучил»</span></div>' +
-          '<div class="metric ' + (sub.hardCount > 0 ? 'warn' : '') + '"><b>' + sub.hardCount + '</b><span>сложные страницы</span></div>' +
+          '<div class="metric ' + (sub.hardCount > 0 ? 'warn' : '') + '"><b>' + sub.hardCount + '</b><span>сложные фрагменты</span></div>' +
           '<div class="metric ' + (sub.dueReviews > 0 ? 'warn' : 'good') + '"><b>' + sub.dueReviews + '</b><span>повторить сегодня</span></div>' +
           '<div class="metric"><b>' + accuracy + '%</b><span>доля выученных из выданных</span></div>' +
           '</div>' +
@@ -1279,7 +1310,7 @@ function renderApp(publicUrl: string): string {
         actions.className = "actions";
         actions.appendChild(
           sub.active
-            ? button("Получить следующую страницу", "btn", function() { nextPage(sub.bookId); })
+            ? button("Получить следующий фрагмент", "btn", function() { nextPage(sub.bookId); })
             : button("Снова учить эту книгу", "btn", function() { toggleBook(sub); })
         );
         actions.appendChild(button("Читать полный текст", "btn secondary", function() { openReader(sub.bookId, 0); }));
@@ -1291,7 +1322,7 @@ function renderApp(publicUrl: string): string {
       function weeklyGoalControl(currentGoal) {
         var el = document.createElement("div");
         el.className = "metric";
-        el.innerHTML = '<b>' + esc(currentGoal) + '</b><span>цель на неделю<br>сколько страниц хочешь выучить</span>';
+        el.innerHTML = '<b>' + esc(currentGoal) + '</b><span>цель на неделю<br>сколько фрагментов хочешь выучить</span>';
         var actions = document.createElement("div");
         actions.className = "actions";
         [3, 5, 7, 10, 14].forEach(function(goal) {
@@ -1306,7 +1337,7 @@ function renderApp(publicUrl: string): string {
         var el = document.createElement("div");
         el.className = "history-row";
         var parts = [];
-        if (day.lessonPages) parts.push(day.lessonPages + " стр. получено");
+        if (day.lessonPages) parts.push(day.lessonPages + " фрагм. получено");
         if (day.learned) parts.push(day.learned + " выучено");
         if (day.hard) parts.push(day.hard + " сложно");
         if (day.repeat) parts.push(day.repeat + " повторить");
@@ -1327,7 +1358,7 @@ function renderApp(publicUrl: string): string {
         el.className = "weak-page";
         el.innerHTML =
           '<img src="' + item.imageUrl + '" alt="">' +
-          '<div><b>' + esc(item.titleRu) + ': стр. ' + item.page + '</b><span>Отмечалась сложной: ' + item.count + ' раз' + (item.lastDate ? '. Последний раз: ' + dateLabel(item.lastDate) : '') + '</span><div class="actions"><button class="btn secondary" data-read>Открыть страницу</button></div></div>';
+          '<div><b>' + esc(item.titleRu) + ': фрагмент ' + item.page + '</b><span>Отмечался сложным: ' + item.count + ' раз' + (item.lastDate ? '. Последний раз: ' + dateLabel(item.lastDate) : '') + '</span><div class="actions"><button class="btn secondary" data-read>Открыть фрагмент</button></div></div>';
         el.querySelector("[data-read]").addEventListener("click", function() { openReader(item.bookId, item.page - 1); });
         return el;
       }
@@ -1339,7 +1370,7 @@ function renderApp(publicUrl: string): string {
           var el = document.createElement("article");
           el.className = "book panel";
           el.innerHTML = '<div class="book-title"><b>' + esc(sub.titleRu) + '</b><span>Настройки этой книги</span></div>';
-          el.appendChild(selectField("Темп", sub.pace, [["slow","1 страница"],["normal","2 страницы"],["fast","3 страницы"]], function(v) { updateSettings(sub.bookId, { pace: v }); }));
+          el.appendChild(selectField("Темп", sub.pace, [["slow","1 фрагмент"],["normal","2 фрагмента"],["fast","3 фрагмента"]], function(v) { updateSettings(sub.bookId, { pace: v }); }));
           el.appendChild(selectField("Время", String(sub.dailyHour), [6,8,10,13,16,20,22].map(function(h){ return [String(h), pad(h)+":00"]; }), function(v) { updateSettings(sub.bookId, { dailyHour: Number(v) }); }));
           el.appendChild(selectField("Режим", sub.mode, [["read_listen","текст и аудио"],["read","только текст"],["listen","только аудио"],["review","только повторение"]], function(v) { updateSettings(sub.bookId, { mode: v }); }));
           box.appendChild(el);
@@ -1350,14 +1381,14 @@ function renderApp(publicUrl: string): string {
         var box = document.getElementById("lessonBox");
         box.className = "panel lesson";
         var audioLabel = lesson.audioScope === "book"
-          ? "Аудио - чтение всего матна. Для страницы используй PDF выше."
+          ? "Аудио - чтение всего матна. Для учебного фрагмента используй PDF выше."
           : lesson.audioStatus === "verified"
-            ? "Проверенное аудио этой страницы."
-            : "Предварительное аудио страницы. Сейчас сверяем таймкоды.";
+            ? "Проверенное аудио этого фрагмента."
+            : "Аудио для этого фрагмента пока не проверено.";
         var audio = lesson.audioUrl ? '<audio src="' + lesson.audioUrl + '" controls></audio><p class="lead">' + audioLabel + '</p>' : '';
         box.innerHTML =
           '<div class="lesson-media"><img src="' + lesson.imageUrl + '" alt=""></div>' +
-          '<div class="lesson-body"><h2>' + esc(lesson.titleRu) + ': страница ' + lesson.page + ' из ' + lesson.total + '</h2>' +
+          '<div class="lesson-body"><h2>' + esc(lesson.titleRu) + ': фрагмент ' + lesson.page + ' из ' + lesson.total + '</h2>' +
           audio + '<div class="actions">' +
           '<button class="btn" data-feedback="learned">Выучил</button>' +
           '<button class="btn warn" data-feedback="hard">Сложно</button>' +
@@ -1392,7 +1423,7 @@ function renderApp(publicUrl: string): string {
         if (!book) return;
         var page = book.pages[readerPageIndex];
         document.getElementById("readerTitle").textContent = book.titleRu;
-        document.getElementById("readerMeta").textContent = "Страница " + page.page + " из " + book.totalChunks;
+        document.getElementById("readerMeta").textContent = "Фрагмент " + page.page + " из " + book.totalChunks;
         document.getElementById("readerPage").innerHTML = '<img src="' + page.imageUrl + '" alt="">';
         document.getElementById("readerAudio").src = page.audioUrl || book.bookAudioUrl || "";
         document.getElementById("readerPrev").disabled = readerPageIndex === 0;
@@ -1414,7 +1445,7 @@ function renderApp(publicUrl: string): string {
       async function startBook(bookId, pace) {
         await api("/books/" + bookId + "/start", { method: "POST", body: { pace: pace } });
         await loadState();
-        toast("Книга добавлена. Открой «Сегодня» и получи первую страницу.");
+        toast("Книга добавлена. Открой «Сегодня» и получи первый фрагмент.");
         switchView("todayView");
       }
 
@@ -1422,7 +1453,7 @@ function renderApp(publicUrl: string): string {
         var data = await api("/books/" + bookId + "/next", { method: "POST" });
         lesson = data.lesson;
         await loadState();
-        toast("Страница открыта. После заучивания отметь результат.");
+        toast("Фрагмент открыт. После заучивания отметь результат.");
         switchView("todayView");
       }
 
@@ -1584,7 +1615,7 @@ function renderProductApp(): string {
         </div>
 
         <div class="metrics-grid">
-          <div class="metric-card"><b id="mNew">0</b><span>страниц сегодня</span></div>
+          <div class="metric-card"><b id="mNew">0</b><span>фрагментов сегодня</span></div>
           <div class="metric-card"><b id="mReviews">0</b><span>повторений</span></div>
           <div class="metric-card"><b id="mGoal">0/5</b><span>цель недели</span></div>
         </div>
@@ -1622,7 +1653,7 @@ function renderProductApp(): string {
             <div class="section-head">
               <div>
                 <h2>Читать книгу</h2>
-                <p>Полный текст и аудио. Это не меняет расписание, пока не нажмёшь «Учить страницу».</p>
+                <p>Полный текст и аудио. Это не меняет расписание, пока не нажмёшь «Учить фрагмент».</p>
               </div>
             </div>
             <div id="readBooks" class="stack compact"></div>
@@ -1638,7 +1669,7 @@ function renderProductApp(): string {
           <div class="section-head">
             <div>
               <h2>Книги, которые я учу</h2>
-              <p>По этим книгам бот может присылать ежедневные страницы.</p>
+              <p>По этим книгам бот может присылать ежедневные фрагменты.</p>
             </div>
             <span class="soft-pill" id="activeLimit">0/2</span>
           </div>
@@ -1671,7 +1702,7 @@ function renderProductApp(): string {
           <div class="section-head">
             <div>
               <h2>Прогресс</h2>
-              <p>История занятий, цель недели и слабые страницы.</p>
+              <p>История занятий, цель недели и слабые фрагменты.</p>
             </div>
           </div>
           <div id="progressMetrics" class="metrics-grid inside"></div>
@@ -1694,7 +1725,7 @@ function renderProductApp(): string {
             <div id="reviewsList" class="stack"></div>
           </div>
           <div class="section-card">
-            <h2>Слабые страницы</h2>
+            <h2>Слабые фрагменты</h2>
             <div id="weakList" class="stack"></div>
           </div>
         </div>
@@ -2021,7 +2052,7 @@ function renderProductApp(): string {
               </div>
             </div>
             <div class="metrics">
-              <div class="metric"><b id="mNew">0</b><span>новые страницы</span></div>
+              <div class="metric"><b id="mNew">0</b><span>новые фрагменты</span></div>
               <div class="metric"><b id="mReviews">0</b><span>повторить сегодня</span></div>
               <div class="metric"><b id="mGoal">0/5</b><span>цель недели</span></div>
             </div>
@@ -2088,7 +2119,7 @@ function renderProductApp(): string {
             <div id="reviewList" class="list" style="margin-top:12px"></div>
           </div>
           <div class="card section">
-            <h2>Слабые страницы</h2>
+            <h2>Слабые фрагменты</h2>
             <p class="lead">Страницы, которые отмечались как сложные.</p>
             <div id="weakList" class="list" style="margin-top:12px"></div>
           </div>
@@ -2141,7 +2172,7 @@ function renderProductApp(): string {
       var lesson = null;
       var readerBookId = null;
       var readerPageIndex = 0;
-      var paceLabels = { slow: "1 стр./день", normal: "2 стр./день", fast: "3 стр./день" };
+      var paceLabels = { slow: "1 фрагмент/день", normal: "2 фрагмента/день", fast: "3 фрагмента/день" };
       var paceValues = { slow: 1, normal: 2, fast: 3 };
       var modeLabels = { read_listen: "текст и аудио", read: "только текст", listen: "только аудио", review: "только повторение" };
       var feedbackLabels = { learned: "Выучил", hard: "Сложно", repeat: "Повторить завтра" };
@@ -2196,14 +2227,14 @@ function renderProductApp(): string {
         document.getElementById("mReviews").textContent = due.length;
         document.getElementById("mGoal").textContent = state.activity.weeklyGoal.learned + "/" + state.activity.weeklyGoal.pages;
         document.getElementById("todayStatus").textContent = state.activity.today.studied ? "Сегодня выполнено" : "Сегодня";
-        document.getElementById("todayLead").textContent = active.length ? "Открой занятие, пройди страницу и отметь результат." : "Добавь первую книгу, чтобы появился план занятий.";
+        document.getElementById("todayLead").textContent = active.length ? "Открой занятие, пройди фрагмент и отметь результат." : "Добавь первую книгу, чтобы появился план занятий.";
         document.getElementById("todayNotice").innerHTML = state.activity.today.shouldRemind ? '<div class="notice">' + esc(state.activity.today.text) + '</div>' : "";
 
         var plan = document.getElementById("todayPlan");
         plan.innerHTML = "";
         if (!active.length) plan.appendChild(notice("Нет книг в занятиях. Открой «Книги» и добавь матн."));
         active.forEach(function(sub) {
-          plan.appendChild(taskCard("Новая страница", sub.titleRu, nextLabel(sub), [
+          plan.appendChild(taskCard("Новый фрагмент", sub.titleRu, nextLabel(sub), [
             ["Начать", "btn", function() { nextPage(sub.bookId); }],
             ["Читать", "btn secondary", function() { openReader(sub.bookId, Math.max(0, sub.nextChunkIndex)); }]
           ]));
@@ -2226,7 +2257,7 @@ function renderProductApp(): string {
         if (!lesson) {
           var active = activeSubs();
           var panel = div("card section");
-          panel.innerHTML = '<h2>Готов к занятию?</h2><p class="lead">Выбери книгу или нажми «Начать занятие». Я открою следующую страницу с аудио.</p>';
+          panel.innerHTML = '<h2>Готов к занятию?</h2><p class="lead">Выбери книгу или нажми «Начать занятие». Я открою следующий фрагмент с аудио.</p>';
           var actions = div("actions");
           if (active[0]) actions.appendChild(button("Начать занятие", "btn", function() { nextPage(active[0].bookId); }));
           actions.appendChild(button("Выбрать книгу", "btn secondary", function() { switchView("booksView"); }));
@@ -2237,14 +2268,14 @@ function renderProductApp(): string {
         }
         var media = div("card section");
         var audioLabel = lesson.audioScope === "book"
-          ? "Аудио - чтение всего матна. Оно не привязано к отдельной странице."
+          ? "Аудио - чтение всего матна. Оно не привязано к отдельному фрагменту."
           : lesson.audioStatus === "verified"
-            ? "Проверенное аудио этой страницы."
-            : "Предварительное аудио страницы. Сейчас сверяем таймкоды.";
+            ? "Проверенное аудио этого фрагмента."
+            : "Аудио для этого фрагмента пока не проверено.";
         media.innerHTML = '<div class="lesson-media"><img src="' + lesson.imageUrl + '" alt=""></div>' +
           (lesson.audioUrl ? '<audio src="' + lesson.audioUrl + '" controls></audio><p class="lead">' + audioLabel + '</p>' : '');
         var side = div("card section");
-        side.innerHTML = '<h2>' + esc(lesson.titleRu) + '</h2><p class="lead">Страница ' + lesson.page + ' из ' + lesson.total + '</p>';
+        side.innerHTML = '<h2>' + esc(lesson.titleRu) + '</h2><p class="lead">Фрагмент ' + lesson.page + ' из ' + lesson.total + '</p>';
         side.appendChild(stepsPanel());
         var actions = div("actions");
         actions.appendChild(button("Выучил", "btn", function() { sendFeedback(lesson.bookId, "learned"); }));
@@ -2277,7 +2308,7 @@ function renderProductApp(): string {
         var list = document.getElementById("readBooks");
         list.innerHTML = "";
         state.books.forEach(function(book) {
-          list.appendChild(taskCard(book.totalChunks + " страниц", book.titleRu, book.titleAr || "полный текст и аудио", [
+          list.appendChild(taskCard(book.totalChunks + " фрагментов", book.titleRu, book.titleAr || "полный текст и аудио", [
             ["Читать", "btn secondary", function() { openReader(book.id, 0); }],
             ["PDF целиком", "btn ghost", function() { openFullPdf(book); }]
           ]));
@@ -2295,7 +2326,7 @@ function renderProductApp(): string {
         items.forEach(function(item) {
           list.appendChild(taskCard(dateLabel(item.dueDate), item.titleRu, item.label, [["Открыть", "btn secondary", function() { openReviewPage(item); }]]));
         });
-        if (!state.activity.weakPages.length) weak.appendChild(notice("Слабые страницы появятся после отметки «Сложно»."));
+        if (!state.activity.weakPages.length) weak.appendChild(notice("Слабые фрагменты появятся после отметки «Сложно»."));
         state.activity.weakPages.forEach(function(item) {
           weak.appendChild(weakCard(item));
         });
@@ -2317,7 +2348,7 @@ function renderProductApp(): string {
         var hard = state.subscriptions.reduce(function(sum, sub) { return sum + sub.hardCount; }, 0);
         metrics.appendChild(metric(Math.round(total ? sent / total * 100 : 0) + "%", "общий прогресс"));
         metrics.appendChild(metric(state.activity.weeklyGoal.learned + "/" + state.activity.weeklyGoal.pages, "цель недели"));
-        metrics.appendChild(metric(hard, "сложные страницы"));
+        metrics.appendChild(metric(hard, "сложные фрагменты"));
         goal.appendChild(goalControl(state.activity.weeklyGoal.pages));
         state.activity.calendar.forEach(function(day) { cal.appendChild(habitDay(day)); });
         state.subscriptions.forEach(function(sub) { books.appendChild(analyticsBook(sub)); });
@@ -2327,10 +2358,10 @@ function renderProductApp(): string {
       function stepsPanel() {
         var panel = div("steps");
         panel.innerHTML =
-          '<div class="step"><i>1</i><div><b>Прочитай</b><p>Посмотри страницу внимательно.</p></div></div>' +
+          '<div class="step"><i>1</i><div><b>Прочитай</b><p>Посмотри фрагмент внимательно.</p></div></div>' +
           '<div class="step"><i>2</i><div><b>Послушай</b><p>Включи аудио и повтори за чтением.</p></div></div>' +
           '<div class="step"><i>3</i><div><b>Закрой текст</b><p>Попробуй воспроизвести по памяти.</p></div></div>' +
-          '<div class="step"><i>4</i><div><b>Отметь результат</b><p>Так страница попадет в нужное повторение.</p></div></div>';
+          '<div class="step"><i>4</i><div><b>Отметь результат</b><p>Так фрагмент попадет в нужное повторение.</p></div></div>';
         return panel;
       }
 
@@ -2350,7 +2381,7 @@ function renderProductApp(): string {
       function catalogCard(book, activeCount) {
         var existing = getSubscription(book.id);
         var el = div("book");
-        el.innerHTML = '<div class="head"><div class="title"><b>' + esc(book.titleRu) + '</b><span>' + esc(book.titleAr || "") + '</span></div><span class="pill">' + book.totalChunks + ' стр.</span></div>';
+        el.innerHTML = '<div class="head"><div class="title"><b>' + esc(book.titleRu) + '</b><span>' + esc(book.titleAr || "") + '</span></div><span class="pill">' + book.totalChunks + ' фрагм.</span></div>';
         var actions = div("actions");
         actions.appendChild(button("Читать", "btn secondary", function() { openReader(book.id, 0); }));
         if (existing) {
@@ -2360,9 +2391,9 @@ function renderProductApp(): string {
           disabled.disabled = true;
           actions.appendChild(disabled);
         } else {
-          actions.appendChild(button("1 стр./день", "btn", function() { startBook(book.id, "slow"); }));
-          actions.appendChild(button("2 стр./день", "btn secondary", function() { startBook(book.id, "normal"); }));
-          actions.appendChild(button("3 стр./день", "btn secondary", function() { startBook(book.id, "fast"); }));
+          actions.appendChild(button("1 фрагм./день", "btn", function() { startBook(book.id, "slow"); }));
+          actions.appendChild(button("2 фрагм./день", "btn secondary", function() { startBook(book.id, "normal"); }));
+          actions.appendChild(button("3 фрагм./день", "btn secondary", function() { startBook(book.id, "fast"); }));
         }
         el.appendChild(actions);
         return el;
@@ -2380,10 +2411,10 @@ function renderProductApp(): string {
         var page = book.pages[readerPageIndex];
         var audio = page.audioUrl || book.bookAudioUrl;
         box.innerHTML =
-          '<div class="head"><div class="title"><b>' + esc(book.titleRu) + '</b><span>Страница ' + page.page + ' из ' + book.totalChunks + (page.sourcePageNumber ? ' · PDF стр. ' + page.sourcePageNumber : '') + '</span></div></div>' +
+          '<div class="head"><div class="title"><b>' + esc(book.titleRu) + '</b><span>Фрагмент ' + page.page + ' из ' + book.totalChunks + (page.sourcePageNumber ? ' · PDF стр. ' + page.sourcePageNumber : '') + '</span></div></div>' +
           '<div class="reader-page"><img src="' + page.imageUrl + '" alt=""></div>' +
-          (audio ? '<audio src="' + audio + '" controls></audio><p class="lead">' + (page.audioUrl ? 'Аудио этой страницы.' : 'Аудио - чтение всего матна. Страницы PDF ниже точные, аудио включай как общее чтение.') + '</p>' : '') +
-          '<div class="actions"><button class="btn secondary" id="readerPrev">Назад</button><button class="btn secondary" id="readerNext">Вперед</button><button class="btn" id="readerStudy">Учить эту страницу</button><button class="btn ghost" id="readerPdf">PDF целиком</button></div>' +
+          (audio ? '<audio src="' + audio + '" controls></audio><p class="lead">' + (page.audioUrl ? 'Аудио этого фрагмента.' : 'Аудио - чтение всего матна. Страницы PDF ниже точные, аудио включай как общее чтение.') + '</p>' : '') +
+          '<div class="actions"><button class="btn secondary" id="readerPrev">Назад</button><button class="btn secondary" id="readerNext">Вперед</button><button class="btn" id="readerStudy">Учить этот фрагмент</button><button class="btn ghost" id="readerPdf">PDF целиком</button></div>' +
           '<div class="page-strip" id="pageStrip"></div>';
         document.getElementById("readerPrev").onclick = function() { moveReader(-1); };
         document.getElementById("readerNext").onclick = function() { moveReader(1); };
@@ -2413,13 +2444,13 @@ function renderProductApp(): string {
         var remaining = Math.max(0, sub.totalChunks - sent);
         var days = sub.active ? Math.ceil(remaining / paceValue(sub.pace)) : null;
         var el = div("book");
-        el.innerHTML = '<div class="head"><div class="title"><b>' + esc(sub.titleRu) + '</b><span>' + sent + '/' + sub.totalChunks + ' страниц</span></div><span class="pill">' + sub.progressPercent + '%</span></div>' +
+        el.innerHTML = '<div class="head"><div class="title"><b>' + esc(sub.titleRu) + '</b><span>' + sent + '/' + sub.totalChunks + ' фрагментов</span></div><span class="pill">' + sub.progressPercent + '%</span></div>' +
           '<div class="bar"><i style="width:' + sub.progressPercent + '%"></i></div><p class="lead">' + (sub.active ? (remaining ? "Около " + days + " дн. до конца" : "Книга пройдена") : "Не в ежедневных заданиях") + '</p>';
         return el;
       }
       function weakCard(item) {
         var el = div("weak-row");
-        el.innerHTML = '<img src="' + item.imageUrl + '" alt=""><div><b>' + esc(item.titleRu) + ': стр. ' + item.page + '</b><span class="lead">Отмечалась сложной: ' + item.count + ' раз</span><div class="actions"><button class="btn secondary">Открыть</button></div></div>';
+        el.innerHTML = '<img src="' + item.imageUrl + '" alt=""><div><b>' + esc(item.titleRu) + ': фрагмент ' + item.page + '</b><span class="lead">Отмечался сложным: ' + item.count + ' раз</span><div class="actions"><button class="btn secondary">Открыть</button></div></div>';
         el.querySelector("button").onclick = function() { openReader(item.bookId, item.page - 1); };
         return el;
       }
@@ -2434,7 +2465,7 @@ function renderProductApp(): string {
       function historyRow(day) {
         var el = div("history-row");
         var parts = [];
-        if (day.lessonPages) parts.push(day.lessonPages + " стр. получено");
+        if (day.lessonPages) parts.push(day.lessonPages + " фрагм. получено");
         if (day.learned) parts.push(day.learned + " выучено");
         if (day.hard) parts.push(day.hard + " сложно");
         if (day.repeat) parts.push(day.repeat + " повторить");
@@ -2467,7 +2498,7 @@ function renderProductApp(): string {
         lesson = data.lesson;
         await loadState();
         switchView("studyView");
-        toast("Страница открыта. Пройди шаги и отметь результат.");
+        toast("Фрагмент открыт. Пройди шаги и отметь результат.");
       }
       async function sendFeedback(bookId, feedback) {
         await api("/books/" + bookId + "/feedback", { method: "POST", body: { feedback: feedback } });
@@ -2523,7 +2554,7 @@ function renderProductApp(): string {
       function dueReviewItems() { return state.schedule.filter(function(item) { return item.type === "review" && item.dueDate <= todayKey(); }); }
       function getBook(bookId) { return state.books.find(function(book) { return book.id === bookId; }); }
       function getSubscription(bookId) { return state.subscriptions.find(function(sub) { return sub.bookId === bookId; }); }
-      function nextLabel(sub) { return sub.nextPreview ? "Страница " + (sub.nextPreview.index + 1) + " из " + sub.totalChunks : "Новые страницы закончились"; }
+      function nextLabel(sub) { return sub.nextPreview ? "Фрагмент " + (sub.nextPreview.index + 1) + " из " + sub.totalChunks : "Новые фрагменты закончились"; }
       function paceValue(pace) { return paceValues[pace] || 1; }
       function pad(value) { return String(value).padStart(2, "0"); }
       function todayKey() { return new Date().toISOString().slice(0, 10); }

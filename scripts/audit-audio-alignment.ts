@@ -23,6 +23,7 @@ const lines: string[] = [
 let totalChunks = 0;
 let verifiedChunks = 0;
 let estimatedChunks = 0;
+let missingStatusChunks = 0;
 let missingAudio = 0;
 
 for (const book of catalog.books) {
@@ -35,6 +36,7 @@ for (const book of catalog.books) {
     const status = chunk.audioStatus ?? book.audioStatus ?? "estimated";
     statuses.set(status, (statuses.get(status) ?? 0) + 1);
     if (status === "verified") verifiedChunks += 1;
+    else if (status === "missing") missingStatusChunks += 1;
     else estimatedChunks += 1;
 
     if (!chunk.audioPath) {
@@ -67,7 +69,7 @@ for (const book of catalog.books) {
 }
 
 lines.unshift(
-  `Summary: ${verifiedChunks}/${totalChunks} verified, ${estimatedChunks} estimated, ${missingAudio} missing audio.`,
+  `Summary: ${verifiedChunks}/${totalChunks} verified, ${estimatedChunks} estimated, ${missingStatusChunks} intentionally missing, ${missingAudio} missing audio files.`,
   ""
 );
 

@@ -17,7 +17,7 @@ await bot.telegram.setMyCommands([
   { command: "app", description: "Личный кабинет" },
   { command: "books", description: "Добавить книгу" },
   { command: "today", description: "Задание на сегодня" },
-  { command: "next", description: "Следующая страница" },
+  { command: "next", description: "Следующий фрагмент" },
   { command: "schedule", description: "Расписание заданий и повторений" },
   { command: "progress", description: "Посмотреть прогресс" },
   { command: "time", description: "Время задания" },

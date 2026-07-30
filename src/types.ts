@@ -43,7 +43,7 @@ export type CatalogChunk = {
   title: string;
   imagePath: string;
   audioPath?: string;
-  audioStatus?: "verified" | "estimated";
+  audioStatus?: "verified" | "estimated" | "missing";
   textPath?: string;
   sourcePageNumber?: number;
 };
@@ -58,7 +58,7 @@ export type CatalogBook = {
   fullPdfPath?: string;
   audioPath?: string;
   audioScope?: "book" | "page";
-  audioStatus?: "verified" | "estimated";
+  audioStatus?: "verified" | "estimated" | "missing";
   chunks: CatalogChunk[];
 };
 

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { Input, Markup, type Telegraf } from "telegraf";
-import { chunksPerDay, findBook, readCatalog } from "./content.js";
+import { chunksPerDay, findBook, isBookReadyForLessons, readCatalog } from "./content.js";
 import type { AppConfig } from "./config.js";
 import { JsonStore } from "./storage.js";
 import type { CatalogBook, CatalogChunk, Subscription } from "./types.js";
@@ -17,7 +17,7 @@ export async function sendDailyPortion(
     : await store.getActiveSubscription(chatId);
 
   if (!subscription) {
-    await bot.telegram.sendMessage(chatId, "Сначала выбери книгу через /start. Потом я буду присылать страницы матна и аудио к ним.");
+    await bot.telegram.sendMessage(chatId, "Сначала выбери книгу через /start. Потом я буду присылать фрагменты матна и аудио к ним.");
     return;
   }
 
@@ -67,7 +67,7 @@ export async function sendStudyReminders(bot: Telegraf, config: AppConfig, store
         [
           "Сегодня еще не занимался.",
           "",
-          "Открой кабинет, получи страницу или отметь результат по уже выданной странице."
+          "Открой кабинет, получи фрагмент или отметь результат по уже выданному фрагменту."
         ].join("\n"),
         Markup.inlineKeyboard([[Markup.button.webApp("Открыть кабинет", `${config.publicUrl}/app`)]])
       );
@@ -106,12 +106,16 @@ export async function sendNextPage(
     await bot.telegram.sendMessage(chatId, "Книга не найдена в каталоге. Запусти /start и выбери заново.");
     return;
   }
+  if (!isBookReadyForLessons(book)) {
+    await bot.telegram.sendMessage(chatId, "Для этой книги пока нет проверенной нарезки. Я не буду отправлять ее в задания, чтобы не дать неправильное аудио.");
+    return;
+  }
 
   const chunk = book.chunks[subscription.nextChunkIndex];
   if (!chunk) {
     await bot.telegram.sendMessage(
       chatId,
-      `В книге «${book.titleRu}» новые страницы закончились. Дальше будут приходить повторения по расписанию.`
+      `В книге «${book.titleRu}» новые фрагменты закончились. Дальше будут приходить повторения по расписанию.`
     );
     return;
   }
@@ -119,10 +123,10 @@ export async function sendNextPage(
   await bot.telegram.sendMessage(
     chatId,
     [
-      "Следующая страница",
+      "Следующий фрагмент",
       "",
       `${book.titleRu} / ${book.titleAr}`,
-      `Страница ${chunk.index + 1} из ${book.chunks.length}`
+      `Фрагмент ${chunk.index + 1} из ${book.chunks.length}`
     ].join("\n")
   );
 
@@ -152,7 +156,7 @@ export async function sendSelfCheck(
   if (!book) return;
 
   const buttons = subscription.lastLessonChunkIndexes.map((index) => [
-    Markup.button.callback(`Показать страницу ${index + 1}`, `show:${book.id}:${index}`)
+    Markup.button.callback(`Показать фрагмент ${index + 1}`, `show:${book.id}:${index}`)
   ]);
 
   await bot.telegram.sendMessage(
@@ -161,7 +165,7 @@ export async function sendSelfCheck(
       "Проверка по памяти.",
       "",
       `Книга: ${book.titleRu}`,
-      `Страницы: ${subscription.lastLessonChunkIndexes.map((index) => index + 1).join(", ")}`,
+      `Фрагменты: ${subscription.lastLessonChunkIndexes.map((index) => index + 1).join(", ")}`,
       "",
       "Сначала прочитай по памяти. Потом открой текст и сверяйся."
     ].join("\n"),
@@ -180,12 +184,12 @@ export async function showChunk(
   const book = findBook(catalog, bookId);
   const chunk = book?.chunks[chunkIndex];
   if (!book || !chunk) {
-    await bot.telegram.sendMessage(chatId, "Не нашел эту страницу. Открой /books и выбери книгу заново.");
+    await bot.telegram.sendMessage(chatId, "Не нашел этот фрагмент. Открой /books и выбери книгу заново.");
     return;
   }
 
   await bot.telegram.sendPhoto(chatId, Input.fromLocalFile(path.resolve(config.contentDir, chunk.imagePath)), {
-    caption: `${book.titleRu} / ${book.titleAr}\nПроверка: страница ${chunk.index + 1} из ${book.chunks.length}`
+    caption: `${book.titleRu} / ${book.titleAr}\nПроверка: фрагмент ${chunk.index + 1} из ${book.chunks.length}`
   });
 }
 
@@ -212,6 +216,12 @@ async function sendLessonForSubscription(
   const book = findBook(catalog, subscription.bookId);
   if (!book) {
     await bot.telegram.sendMessage(subscription.chatId, "Книга не найдена в каталоге. Запусти /start и выбери заново.");
+    return;
+  }
+  if (!isBookReadyForLessons(book)) {
+    if (options.manual) {
+      await bot.telegram.sendMessage(subscription.chatId, "Для этой книги пока нет проверенной нарезки. Я не буду отправлять ее в задания, чтобы не дать неправильное аудио.");
+    }
     return;
   }
 
@@ -263,7 +273,7 @@ async function sendLessonControls(bot: Telegraf, chatId: number, bookId: string)
     [
       "Отметь результат.",
       "",
-      "После отметки я покажу, что поставил в повторение, и дам кнопку для следующей страницы."
+      "После отметки я покажу, что поставил в повторение, и дам кнопку для следующего фрагмента."
     ].join("\n"),
     Markup.inlineKeyboard([
       [
@@ -288,13 +298,10 @@ async function sendChunk(
   isReview: boolean
 ): Promise<void> {
   const caption = [
-    isReview ? "Повторение" : "Новая страница",
+    isReview ? "Повторение" : "Новый фрагмент",
     `${book.titleRu} / ${book.titleAr}`,
-    `Страница ${chunk.index + 1} из ${book.chunks.length}`,
-    !chunk.audioPath && book.audioPath ? "Аудио ниже - чтение всего матна, не отдельной страницы." : undefined,
-    chunk.audioPath && (chunk.audioStatus ?? book.audioStatus) !== "verified"
-      ? "Аудио страницы пока предварительное: таймкоды сверяются."
-      : undefined
+    `Фрагмент ${chunk.index + 1} из ${book.chunks.length}`,
+    verifiedChunkAudio(chunk, book) ? undefined : "Для этого фрагмента пока нет проверенного аудио."
   ].filter(Boolean).join("\n");
 
   if (subscription.mode !== "listen") {
@@ -303,10 +310,10 @@ async function sendChunk(
     });
   }
 
-  const audioPath = chunk.audioPath ?? book.audioPath;
+  const audioPath = verifiedChunkAudio(chunk, book);
   if (subscription.mode !== "read" && audioPath) {
     await bot.telegram.sendAudio(subscription.chatId, Input.fromLocalFile(path.resolve(config.contentDir, audioPath)), {
-      title: chunk.audioPath ? `${book.titleRu}: страница ${chunk.index + 1}` : `${book.titleRu}: аудио матна`,
+      title: `${book.titleRu}: фрагмент ${chunk.index + 1}`,
       performer: book.author,
       caption: subscription.mode === "listen" ? caption : undefined
     });
@@ -318,10 +325,10 @@ function lessonHeader(book: CatalogBook, subscription: Subscription, reviewCount
     "Сегодняшнее задание",
     "",
     `${book.titleRu} / ${book.titleAr}`,
-    `Прогресс: ${Math.min(subscription.nextChunkIndex, book.chunks.length)} из ${book.chunks.length} страниц`
+    `Прогресс: ${Math.min(subscription.nextChunkIndex, book.chunks.length)} из ${book.chunks.length} фрагментов`
   ];
 
-  if (newCount > 0) lines.push(`Новые страницы: ${newCount}`);
+  if (newCount > 0) lines.push(`Новые фрагменты: ${newCount}`);
   if (reviewCount > 0) lines.push(`Повторение: ${reviewCount}`);
   lines.push(`Режим: ${modeLabel(subscription.mode)}`);
   return lines.join("\n");
@@ -330,6 +337,11 @@ function lessonHeader(book: CatalogBook, subscription: Subscription, reviewCount
 function nextNewChunks(subscription: Subscription, book: CatalogBook): CatalogChunk[] {
   if (subscription.nextChunkIndex >= book.chunks.length) return [];
   return book.chunks.slice(subscription.nextChunkIndex, subscription.nextChunkIndex + chunksPerDay(subscription.pace));
+}
+
+function verifiedChunkAudio(chunk: CatalogChunk, book: CatalogBook): string | undefined {
+  if ((chunk.audioStatus ?? book.audioStatus) !== "verified") return undefined;
+  return chunk.audioPath;
 }
 
 function dueReviews(subscription: Subscription): number[] {

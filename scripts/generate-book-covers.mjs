@@ -23,7 +23,7 @@ for (const [index, book] of catalog.books.entries()) {
   const lines = titleLines
     .map((line, lineIndex) => `<text x="60" y="${titleY + lineIndex * 44}" class="title">${escapeXml(line)}</text>`)
     .join("\n");
-  const pages = `${book.chunks.length} стр.`;
+  const pages = `${book.chunks.length} фрагм.`;
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="960" viewBox="0 0 720 960" role="img" aria-label="${escapeXml(book.titleRu)}">

@@ -94,9 +94,9 @@ function renderLanding(publicUrl: string): string {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NurTech Hifz</title>
-    <meta name="description" content="Telegram-бот для заучивания матнов: ежедневные страницы с аудио, повторения, самопроверка и прогресс." />
+    <meta name="description" content="Telegram-бот для заучивания матнов: ежедневные фрагменты с аудио, повторения, самопроверка и прогресс." />
     <meta property="og:title" content="NurTech Hifz" />
-    <meta property="og:description" content="Заучивай матны постепенно: страница, аудио, повторение и прогресс каждый день." />
+    <meta property="og:description" content="Заучивай матны постепенно: фрагмент, аудио, повторение и прогресс каждый день." />
     <meta property="og:image" content="${bannerUrl}" />
     <style>
       * { box-sizing: border-box; }
@@ -323,14 +323,14 @@ function renderLanding(publicUrl: string): string {
           <div>
             <div class="eyebrow glass"><span class="dot"></span> Telegram-бот для ежедневного хифза матнов</div>
             <h1>Учить матны спокойно. Каждый день.</h1>
-            <p class="lead">NurTech Hifz разбивает книгу на страницы, присылает текст и аудио, возвращает повторения и показывает прогресс. Без перегруза: открыл Telegram, сделал задание, отметил результат.</p>
+            <p class="lead">NurTech Hifz разбивает матн на учебные фрагменты, присылает текст и аудио, возвращает повторения и показывает прогресс. Без перегруза: открыл Telegram, сделал задание, отметил результат.</p>
             <div class="actions">
               <a class="cta" href="${botUrl}">Начать в Telegram</a>
               <a class="ghost" href="#method">Как это работает</a>
             </div>
             <div class="stats">
               <div class="stat glass"><strong>12</strong><span>матнов уже в каталоге</span></div>
-              <div class="stat glass"><strong>1-3</strong><span>страницы в день на выбор</span></div>
+              <div class="stat glass"><strong>1-3</strong><span>фрагмента в день на выбор</span></div>
               <div class="stat glass"><strong>4</strong><span>волны повторения после выученного</span></div>
             </div>
           </div>
@@ -371,19 +371,19 @@ function renderLanding(publicUrl: string): string {
 
       <section id="method" class="section shell">
         <h2>Метод без суеты</h2>
-        <p class="section-copy">Бот ведет не просто по страницам. Он помогает закреплять: новое задание, отметка результата, повторение завтра, через 3 дня, через неделю и через 2 недели.</p>
+        <p class="section-copy">Бот ведет не просто по порядку. Он помогает закреплять: новое задание, отметка результата, повторение завтра, через 3 дня, через неделю и через 2 недели.</p>
         <div class="cards">
           <article class="card glass">
-            <div class="card-visual"><img src="${dailyLessonUrl}" alt="Ежедневная страница матна с аудио в Telegram" loading="lazy" /></div>
-            <div class="card-body"><span class="icon">1</span><b>Получаешь страницу</b><p>Картинка матна и аудио приходят прямо в Telegram в выбранное время.</p></div>
+            <div class="card-visual"><img src="${dailyLessonUrl}" alt="Ежедневный фрагмент матна с аудио в Telegram" loading="lazy" /></div>
+            <div class="card-body"><span class="icon">1</span><b>Получаешь фрагмент</b><p>Картинка матна и аудио приходят прямо в Telegram в выбранное время.</p></div>
           </article>
           <article class="card glass">
-            <div class="card-visual"><img src="${selfCheckUrl}" alt="Самопроверка заученной страницы" loading="lazy" /></div>
+            <div class="card-visual"><img src="${selfCheckUrl}" alt="Самопроверка заученного фрагмента" loading="lazy" /></div>
             <div class="card-body"><span class="icon">2</span><b>Отмечаешь результат</b><p>Нажимаешь «Выучил», «Сложно» или «Повторить завтра».</p></div>
           </article>
           <article class="card glass">
             <div class="card-visual"><img src="${reviewScheduleUrl}" alt="График повторений для матнов" loading="lazy" /></div>
-            <div class="card-body"><span class="icon">3</span><b>Повторяешь по графику</b><p>Старые страницы возвращаются в нужные дни, чтобы знание не распалось.</p></div>
+            <div class="card-body"><span class="icon">3</span><b>Повторяешь по графику</b><p>Старые фрагменты возвращаются в нужные дни, чтобы знание не распалось.</p></div>
           </article>
         </div>
       </section>
@@ -402,7 +402,7 @@ function renderLanding(publicUrl: string): string {
           </article>
           <article class="card glass">
             <div class="card-visual"><img src="${progressUrl}" alt="Прогресс заучивания матнов" loading="lazy" /></div>
-            <div class="card-body"><span class="icon">↗</span><b>Прогресс</b><p>Видно, сколько страниц пройдено, что выучено и что пора повторить.</p></div>
+            <div class="card-body"><span class="icon">↗</span><b>Прогресс</b><p>Видно, сколько фрагментов пройдено, что выучено и что пора повторить.</p></div>
           </article>
         </div>
       </section>
@@ -439,7 +439,7 @@ function renderLanding(publicUrl: string): string {
       <section class="shell">
         <div class="cta-band glass">
           <div>
-            <h2>Начни с одной страницы.</h2>
+            <h2>Начни с одного фрагмента.</h2>
             <p>Выбери книгу, поставь темп и получи первое задание сразу через /today.</p>
           </div>
           <a class="cta" href="${botUrl}">Открыть @nurtechhifzbot</a>

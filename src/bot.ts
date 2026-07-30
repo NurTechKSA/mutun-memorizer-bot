@@ -1,5 +1,5 @@
 import { Markup, Telegraf, type Context } from "telegraf";
-import { findBook, readCatalog } from "./content.js";
+import { findBook, isBookReadyForLessons, readCatalog } from "./content.js";
 import type { AppConfig } from "./config.js";
 import { sendDailyPortion, sendNextPage, sendSelfCheck, showChunk } from "./delivery.js";
 import { JsonStore } from "./storage.js";
@@ -8,9 +8,9 @@ import type { CatalogBook, LessonFeedback, Pace, StudyMode, Subscription } from 
 const maxActiveBooks = 2;
 
 const paceLabels: Record<Pace, string> = {
-  slow: "1 страница в день",
-  normal: "2 страницы в день",
-  fast: "3 страницы в день"
+  slow: "1 фрагмент в день",
+  normal: "2 фрагмента в день",
+  fast: "3 фрагмента в день"
 };
 
 const modeLabels: Record<StudyMode, string> = {
@@ -109,8 +109,15 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
 
   bot.action(/^book:(.+)$/, async (ctx) => {
     const bookId = ctx.match[1];
+    const catalog = await readCatalog(config.contentDir);
+    const book = findBook(catalog, bookId);
     const existing = await store.getSubscription(ctx.chat!.id, bookId);
     await ctx.answerCbQuery();
+
+    if (!book || !isBookReadyForLessons(book)) {
+      await ctx.reply("Для этой книги пока нет проверенной нарезки. Добавим ее после проверки аудио.");
+      return;
+    }
 
     if (existing) {
       await store.setActiveBook(ctx.chat!.id, bookId);
@@ -128,13 +135,13 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
       [
         "Выбери темп занятий.",
         "",
-        "Темп - это сколько новых страниц бот будет присылать в обычный день.",
-        "Если захочешь идти быстрее, в меню будет отдельная кнопка «Следующая страница»."
+        "Темп - это сколько новых фрагментов бот будет присылать в обычный день.",
+        "Если захочешь идти быстрее, в меню будет отдельная кнопка «Следующий фрагмент»."
       ].join("\n"),
       Markup.inlineKeyboard([
-        [Markup.button.callback("Спокойно - 1 страница в день", `pace:${bookId}:slow`)],
-        [Markup.button.callback("Средне - 2 страницы в день", `pace:${bookId}:normal`)],
-        [Markup.button.callback("Быстро - 3 страницы в день", `pace:${bookId}:fast`)],
+        [Markup.button.callback("Спокойно - 1 фрагмент в день", `pace:${bookId}:slow`)],
+        [Markup.button.callback("Средне - 2 фрагмента в день", `pace:${bookId}:normal`)],
+        [Markup.button.callback("Быстро - 3 фрагмента в день", `pace:${bookId}:fast`)],
         [Markup.button.callback("Назад к книгам", "books")]
       ])
     );
@@ -155,10 +162,18 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
 
   bot.action(/^pace:([^:]+):(slow|normal|fast)$/, async (ctx) => {
     const [, bookId, pace] = ctx.match;
-    const activeCount = (await activeSubscriptions(store, ctx.chat!.id)).length;
+    const catalog = await readCatalog(config.contentDir);
+    const book = findBook(catalog, bookId);
+    const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((item) => item.id));
+    const activeCount = (await activeSubscriptions(store, ctx.chat!.id)).filter((item) => readyBookIds.has(item.bookId)).length;
     const existing = await store.getSubscription(ctx.chat!.id, bookId);
 
     await ctx.answerCbQuery();
+
+    if (!book || !isBookReadyForLessons(book)) {
+      await ctx.reply("Для этой книги пока нет проверенной нарезки. Добавим ее после проверки аудио.");
+      return;
+    }
 
     if (!existing && activeCount >= maxActiveBooks) {
       await showBookLimit(ctx, config, store, bookId);
@@ -166,8 +181,6 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
     }
 
     const subscription = await store.upsertSubscription(ctx.chat!.id, bookId, pace as Pace);
-    const catalog = await readCatalog(config.contentDir);
-    const book = findBook(catalog, subscription.bookId);
 
     await ctx.reply(
       [
@@ -178,10 +191,10 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
         `Когда присылать: каждый день в ${formatHour(subscription.dailyHour)}`,
         `Режим: ${modeLabels[subscription.mode]}`,
         "",
-        "Что дальше: нажми «Следующая страница», чтобы получить первую страницу сейчас, или вернись в меню."
+        "Что дальше: нажми «Следующий фрагмент», чтобы получить первый фрагмент сейчас, или вернись в меню."
       ].join("\n"),
       Markup.inlineKeyboard([
-        [Markup.button.callback("Следующая страница", `next:${bookId}`)],
+        [Markup.button.callback("Следующий фрагмент", `next:${bookId}`)],
         [Markup.button.callback("Мои книги", "mybooks"), Markup.button.callback("Меню", "menu")]
       ])
     );
@@ -272,12 +285,20 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
 
   bot.action(/^resume:([^:]+)$/, async (ctx) => {
     const bookId = ctx.match[1];
-    const activeCount = (await activeSubscriptions(store, ctx.chat!.id)).length;
+    const catalog = await readCatalog(config.contentDir);
+    const book = findBook(catalog, bookId);
+    const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((item) => item.id));
+    const activeCount = (await activeSubscriptions(store, ctx.chat!.id)).filter((item) => readyBookIds.has(item.bookId)).length;
     const existing = await store.getSubscription(ctx.chat!.id, bookId);
     await ctx.answerCbQuery();
 
     if (!existing) {
       await ctx.reply("Не нашел эту книгу в твоих занятиях.");
+      return;
+    }
+
+    if (!book || !isBookReadyForLessons(book)) {
+      await ctx.reply("Для этой книги пока нет проверенной нарезки. Добавим ее после проверки аудио.");
       return;
     }
 
@@ -295,15 +316,16 @@ export async function createBot(config: AppConfig, store: JsonStore): Promise<Te
 
 async function showMainMenu(ctx: Context, config: AppConfig, store: JsonStore): Promise<void> {
   const catalog = await readCatalog(config.contentDir);
+  const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((book) => book.id));
   const subscriptions = await store.listSubscriptions(ctx.chat!.id);
-  const active = subscriptions.filter((subscription) => subscription.active);
+  const active = subscriptions.filter((subscription) => subscription.active && readyBookIds.has(subscription.bookId));
 
   if (subscriptions.length === 0) {
     await ctx.reply(
       [
         "NurTech Hifz",
         "",
-        "Я буду вести тебя по матнам: давать страницу, аудио, повторения и прогресс.",
+        "Я буду вести тебя по матнам: давать фрагмент матна, аудио, повторения и прогресс.",
         "",
         "Начни с одной книги. Одновременно можно вести максимум две, чтобы не запутаться."
       ].join("\n"),
@@ -336,7 +358,7 @@ async function showCabinetLink(ctx: Context, config: AppConfig): Promise<void> {
     [
       "Открой личный кабинет.",
       "",
-      "Там видно активные книги, следующую страницу, расписание повторений, прогресс и настройки."
+      "Там видно активные книги, следующий фрагмент, расписание повторений, прогресс и настройки."
     ].join("\n"),
     Markup.inlineKeyboard([[Markup.button.webApp("Открыть кабинет", `${config.publicUrl}/app`)]])
   );
@@ -344,19 +366,21 @@ async function showCabinetLink(ctx: Context, config: AppConfig): Promise<void> {
 
 async function showBooks(ctx: Context, config: AppConfig, store: JsonStore): Promise<void> {
   const catalog = await readCatalog(config.contentDir);
+  const readyBooks = catalog.books.filter(isBookReadyForLessons);
+  const readyBookIds = new Set(readyBooks.map((book) => book.id));
   const subscriptions = await store.listSubscriptions(ctx.chat!.id);
-  const active = subscriptions.filter((subscription) => subscription.active);
+  const active = subscriptions.filter((subscription) => subscription.active && readyBookIds.has(subscription.bookId));
 
   if (active.length >= maxActiveBooks) {
     await showBookLimit(ctx, config, store);
     return;
   }
 
-  const existingIds = new Set(subscriptions.map((subscription) => subscription.bookId));
-  const keyboard = catalog.books.map((book) => {
+  const existingIds = new Set(subscriptions.filter((subscription) => readyBookIds.has(subscription.bookId)).map((subscription) => subscription.bookId));
+  const keyboard = readyBooks.map((book) => {
     const label = existingIds.has(book.id)
       ? `Перейти к занятиям: ${book.titleRu}`
-      : `${book.titleRu} (${book.chunks.length} стр.)`;
+      : `${book.titleRu} (${book.chunks.length} фрагм.)`;
     return [Markup.button.callback(label, existingIds.has(book.id) ? `open:${book.id}` : `book:${book.id}`)];
   });
   keyboard.push([Markup.button.callback("Меню", "menu")]);
@@ -366,6 +390,7 @@ async function showBooks(ctx: Context, config: AppConfig, store: JsonStore): Pro
       "Выбери книгу для заучивания.",
       "",
       `Активно сейчас: ${active.length}/${maxActiveBooks}.`,
+      "В списке только матны, где аудио уже проверено и совпадает с фрагментами.",
       "Лучше начать с одной книги. Вторую добавляй только если реально успеваешь."
     ].join("\n"),
     Markup.inlineKeyboard(keyboard)
@@ -374,7 +399,8 @@ async function showBooks(ctx: Context, config: AppConfig, store: JsonStore): Pro
 
 async function showMyBooks(ctx: Context, config: AppConfig, store: JsonStore): Promise<void> {
   const catalog = await readCatalog(config.contentDir);
-  const subscriptions = await store.listSubscriptions(ctx.chat!.id);
+  const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((book) => book.id));
+  const subscriptions = (await store.listSubscriptions(ctx.chat!.id)).filter((subscription) => readyBookIds.has(subscription.bookId));
 
   if (subscriptions.length === 0) {
     await ctx.reply("Пока нет книг в занятиях.", Markup.inlineKeyboard([[Markup.button.callback("Выбрать книгу", "books")]]));
@@ -415,10 +441,10 @@ async function showBookPanel(ctx: Context, config: AppConfig, subscription: Subs
       "",
       subscriptionSummary(book, subscription),
       "",
-      "Здесь можно сразу получить следующую страницу, посмотреть расписание или поставить книгу на паузу."
+      "Здесь можно сразу получить следующий фрагмент, посмотреть расписание или поставить книгу на паузу."
     ].join("\n"),
     Markup.inlineKeyboard([
-      [Markup.button.callback("Следующая страница", `next:${subscription.bookId}`)],
+      [Markup.button.callback("Следующий фрагмент", `next:${subscription.bookId}`)],
       [Markup.button.callback("Расписание", "schedule"), Markup.button.callback("Настройки", "settings")],
       [Markup.button.callback(subscription.active ? "Поставить на паузу" : "Снова учить эту книгу", subscription.active ? `pausebook:${subscription.bookId}` : `resume:${subscription.bookId}`)],
       [Markup.button.callback("Мои книги", "mybooks"), Markup.button.callback("Меню", "menu")]
@@ -428,7 +454,8 @@ async function showBookPanel(ctx: Context, config: AppConfig, subscription: Subs
 
 async function showProgress(ctx: Context, config: AppConfig, store: JsonStore): Promise<void> {
   const catalog = await readCatalog(config.contentDir);
-  const subscriptions = await store.listSubscriptions(ctx.chat!.id);
+  const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((book) => book.id));
+  const subscriptions = (await store.listSubscriptions(ctx.chat!.id)).filter((subscription) => readyBookIds.has(subscription.bookId));
 
   if (subscriptions.length === 0) {
     await ctx.reply("Пока нет занятий. Нажми «Выбрать книгу».", Markup.inlineKeyboard([[Markup.button.callback("Выбрать книгу", "books")]]));
@@ -449,7 +476,7 @@ async function showProgress(ctx: Context, config: AppConfig, store: JsonStore): 
 
     lines.push(
       `${book.titleRu}`,
-      `${sent}/${book.chunks.length} страниц (${percent}%). Выучено: ${learned}. Повторений сейчас: ${dueReviews}.`,
+      `${sent}/${book.chunks.length} фрагментов (${percent}%). Выучено: ${learned}. Повторений сейчас: ${dueReviews}.`,
       `Темп: ${paceLabels[subscription.pace]}. Время: ${formatHour(subscription.dailyHour)}. Режим: ${modeLabels[subscription.mode]}.`,
       `Статус: ${subscription.active ? pauseStatus(subscription) : "на паузе"}.`,
       ""
@@ -463,7 +490,8 @@ async function showProgress(ctx: Context, config: AppConfig, store: JsonStore): 
 
 async function showSchedule(ctx: Context, config: AppConfig, store: JsonStore): Promise<void> {
   const catalog = await readCatalog(config.contentDir);
-  const subscriptions = await store.listSubscriptions(ctx.chat!.id);
+  const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((book) => book.id));
+  const subscriptions = (await store.listSubscriptions(ctx.chat!.id)).filter((subscription) => readyBookIds.has(subscription.bookId));
   const active = subscriptions.filter((subscription) => subscription.active);
 
   if (subscriptions.length === 0) {
@@ -488,7 +516,7 @@ async function showSchedule(ctx: Context, config: AppConfig, store: JsonStore): 
   lines.push("", "Ближайшие повторения:");
   const reviewLines = upcomingReviewLines(catalog.books, subscriptions);
   lines.push(...(reviewLines.length > 0 ? reviewLines : ["Пока ничего не стоит в повторении."]));
-  lines.push("", "После кнопки «Выучил» страница попадает в повторение. Здесь всегда можно посмотреть, когда она вернется.");
+  lines.push("", "После кнопки «Выучил» фрагмент попадает в повторение. Здесь всегда можно посмотреть, когда она вернется.");
 
   await ctx.reply(
     lines.join("\n"),
@@ -582,7 +610,8 @@ async function showPausePicker(ctx: Context, store: JsonStore): Promise<void> {
 
 async function showBookLimit(ctx: Context, config: AppConfig, store: JsonStore, requestedBookId?: string): Promise<void> {
   const catalog = await readCatalog(config.contentDir);
-  const active = await activeSubscriptions(store, ctx.chat!.id);
+  const readyBookIds = new Set(catalog.books.filter(isBookReadyForLessons).map((book) => book.id));
+  const active = (await activeSubscriptions(store, ctx.chat!.id)).filter((subscription) => readyBookIds.has(subscription.bookId));
   const requested = requestedBookId ? findBook(catalog, requestedBookId) : undefined;
   const lines = [
     "Можно учить максимум 2 книги одновременно.",
@@ -607,7 +636,7 @@ async function showBookLimit(ctx: Context, config: AppConfig, store: JsonStore, 
 function mainKeyboard(canAddBook: boolean, publicUrl: string) {
   const rows = [
     [Markup.button.webApp("Кабинет", `${publicUrl}/app`)],
-    [Markup.button.callback("Задание на сегодня", "today"), Markup.button.callback("Следующая страница", "next")],
+    [Markup.button.callback("Задание на сегодня", "today"), Markup.button.callback("Следующий фрагмент", "next")],
     [Markup.button.callback("Мои книги", "mybooks"), Markup.button.callback("Расписание", "schedule")],
     [Markup.button.callback("Прогресс", "progress"), Markup.button.callback("Настройки", "settings")]
   ];
@@ -617,7 +646,7 @@ function mainKeyboard(canAddBook: boolean, publicUrl: string) {
 
 function feedbackResultKeyboard(bookId: string) {
   return Markup.inlineKeyboard([
-    [Markup.button.callback("Следующая страница", `next:${bookId}`)],
+    [Markup.button.callback("Следующий фрагмент", `next:${bookId}`)],
     [Markup.button.callback("На сегодня хватит", "done_today"), Markup.button.callback("Расписание", "schedule")],
     [Markup.button.callback("Мои книги", "mybooks"), Markup.button.callback("Меню", "menu")]
   ]);
@@ -632,10 +661,10 @@ function feedbackResultText(subscription: Subscription, feedback: LessonFeedback
 
   const scheduled = subscription.reviewQueue.filter((item) => subscription.lastLessonChunkIndexes.includes(item.chunkIndex));
   if (scheduled.length > 0) {
-    lines.push("", "Эти страницы вернутся в повторение:");
+    lines.push("", "Эти фрагменты вернутся в повторение:");
     for (const line of groupedReviewLines(scheduled).slice(0, 6)) lines.push(line);
   } else if (feedback === "learned") {
-    lines.push("", "Повторения для этой страницы уже стояли в расписании.");
+    lines.push("", "Повторения для этого фрагмента уже стояли в расписании.");
   }
 
   lines.push("", "Что дальше?");
@@ -643,7 +672,7 @@ function feedbackResultText(subscription: Subscription, feedback: LessonFeedback
 }
 
 function pauseResultText(action: string): string {
-  if (action === "resume") return "Продолжаем занятия. Следующее задание придет по расписанию, или нажми «Следующая страница».";
+  if (action === "resume") return "Продолжаем занятия. Следующее задание придет по расписанию, или нажми «Следующий фрагмент».";
   if (action === "forever") return "Поставил текущую книгу на паузу. Ежедневные задания по ней не будут приходить. Снова начать можно через «Мои книги».";
   return `Поставил паузу на ${action} дн. Снова начать раньше можно через «Настройки».`;
 }
@@ -652,7 +681,7 @@ function subscriptionSummary(book: CatalogBook | undefined, subscription: Subscr
   return [
     `Книга: ${book?.titleRu ?? subscription.bookId}`,
     `Статус: ${subscription.active ? pauseStatus(subscription) : "на паузе, задания не приходят"}`,
-    `Прогресс: ${Math.min(subscription.nextChunkIndex, book?.chunks.length ?? subscription.nextChunkIndex)}/${book?.chunks.length ?? "?"} страниц`,
+    `Прогресс: ${Math.min(subscription.nextChunkIndex, book?.chunks.length ?? subscription.nextChunkIndex)}/${book?.chunks.length ?? "?"} фрагментов`,
     `Темп: ${paceLabels[subscription.pace]}`,
     `Задание: каждый день в ${formatHour(subscription.dailyHour)}`,
     `Режим: ${modeLabels[subscription.mode]}`
@@ -671,7 +700,7 @@ function upcomingReviewLines(books: CatalogBook[], subscriptions: Subscription[]
       const [date, rest] = line.split(": ");
       const [bookId, pages] = rest.split("|");
       const book = byBook.get(bookId);
-      return `${date}: ${book?.titleRu ?? bookId}, стр. ${pages}`;
+      return `${date}: ${book?.titleRu ?? bookId}, фрагм. ${pages}`;
     });
 }
 
@@ -687,7 +716,7 @@ function groupedReviewLines(items: Array<{ dueDate: string; chunkIndex: number; 
       const [date, bookId] = key.split(": ");
       return `${formatDateKey(date)}: ${bookId}|${pages.join(", ")}`;
     }
-    return `${formatDateKey(key)}: стр. ${pages.join(", ")}`;
+    return `${formatDateKey(key)}: фрагм. ${pages.join(", ")}`;
   });
 }
 

@@ -1,11 +1,14 @@
 node_modules/
 dist/
 .env
+.env.telegram.local
+.secrets/
 data/
 content/raw/
 content/prepared/
 content/catalog.json
 content/audio-timings/*.draft.json
+content/imports/
 tmp/
 .DS_Store
 npm-debug.log*

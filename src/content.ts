@@ -16,6 +16,11 @@ export function findBook(catalog: CatalogFile, bookId: string): CatalogBook | un
   return catalog.books.find((book) => book.id === bookId);
 }
 
+export function isBookReadyForLessons(book: CatalogBook): boolean {
+  if (book.audioStatus !== "verified") return false;
+  return book.chunks.length > 0 && book.chunks.every((chunk) => !chunk.audioPath || chunk.audioStatus === "verified");
+}
+
 export function chunksPerDay(pace: string): number {
   if (pace === "fast") return 3;
   if (pace === "normal") return 2;
