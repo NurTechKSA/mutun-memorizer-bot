@@ -17,7 +17,7 @@ const catalog = JSON.parse(await fs.readFile(catalogPath, "utf8"));
 const stats = [];
 
 for (const book of catalog.books || []) {
-  const pdfPath = path.join(contentDir, "raw", book.id, "matn.pdf");
+  const pdfPath = path.join(contentDir, book.fullPdfPath);
   const textDir = path.join(contentDir, "prepared", book.id, "text");
   await fs.rm(textDir, { recursive: true, force: true });
   await fs.mkdir(textDir, { recursive: true });

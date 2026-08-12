@@ -1,0 +1,40 @@
+{
+  "bookId": "nawaqid-al-islam",
+  "status": "verified",
+  "notes": [
+    "Rename this file to <book-id>.json and set status to verified only after listening and checking every page.",
+    "prepare-content.ts refuses non-verified timing files on purpose."
+  ],
+  "pages": [
+    {
+      "sourcePageNumber": 81,
+      "start": 26.20,
+      "end": 73.06,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 82,
+      "start": 73.06,
+      "end": 138.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 83,
+      "start": 138.0,
+      "end": 215.42,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 84,
+      "start": 215.42,
+      "end": 284.70,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 85,
+      "start": 284.70,
+      "end": 297.3,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    }
+  ]
+}
