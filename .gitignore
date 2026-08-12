@@ -12,3 +12,6 @@ content/imports/
 tmp/
 .DS_Store
 npm-debug.log*
+
+poppler/
+test-text.txt

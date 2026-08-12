@@ -1,0 +1,196 @@
+{
+  "bookId": "al-usul-ath-thalatha",
+  "status": "verified",
+  "notes": [
+    "Rename this file to <book-id>.json and set status to verified only after listening and checking every page.",
+    "prepare-content.ts refuses non-verified timing files on purpose."
+  ],
+  "pages": [
+    {
+      "sourcePageNumber": 21,
+      "start": 27.0,
+      "end": 73.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 22,
+      "start": 73.0,
+      "end": 120.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 23,
+      "start": 120.0,
+      "end": 190.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 24,
+      "start": 190.0,
+      "end": 285.17,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 25,
+      "start": 285.17,
+      "end": 341.35,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 26,
+      "start": 341.35,
+      "end": 360.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 27,
+      "start": 360.0,
+      "end": 408.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 28,
+      "start": 408.0,
+      "end": 487.4,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 29,
+      "start": 487.4,
+      "end": 573.36,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 30,
+      "start": 573.36,
+      "end": 650.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 31,
+      "start": 650.0,
+      "end": 726.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 32,
+      "start": 726.0,
+      "end": 794.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 33,
+      "start": 794.0,
+      "end": 815.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 34,
+      "start": 815.0,
+      "end": 842.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 35,
+      "start": 842.0,
+      "end": 912.78,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 36,
+      "start": 912.78,
+      "end": 1007.20,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 37,
+      "start": 1007.20,
+      "end": 1078.06,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 38,
+      "start": 1078.06,
+      "end": 1145.40,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 39,
+      "start": 1145.40,
+      "end": 1228.68,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 40,
+      "start": 1228.68,
+      "end": 1296.22,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 41,
+      "start": 1296.22,
+      "end": 1338.28,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 42,
+      "start": 1338.28,
+      "end": 1355.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 43,
+      "start": 1355.0,
+      "end": 1400.1,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 44,
+      "start": 1400.1,
+      "end": 1467.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 45,
+      "start": 1467.0,
+      "end": 1555.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 46,
+      "start": 1555.0,
+      "end": 1619.50,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 47,
+      "start": 1619.50,
+      "end": 1693.02,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 48,
+      "start": 1693.02,
+      "end": 1793.05,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 49,
+      "start": 1793.05,
+      "end": 1874.0,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 50,
+      "start": 1874.0,
+      "end": 1922.50,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    },
+    {
+      "sourcePageNumber": 51,
+      "start": 1922.50,
+      "end": 1984.17,
+      "note": "Draft from current estimated audio. Verify manually before renaming to .json."
+    }
+  ]
+}

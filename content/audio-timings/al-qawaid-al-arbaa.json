@@ -1,0 +1,64 @@
+{
+  "bookId": "al-qawaid-al-arbaa",
+  "status": "verified",
+  "notes": [
+    "Verified timings for Al-Qawaid Al-Arbaa"
+  ],
+  "pages": [
+    {
+      "sourcePageNumber": 61,
+      "start": 27.0,
+      "end": 84.40
+    },
+    {
+      "sourcePageNumber": 62,
+      "start": 84.40,
+      "end": 152.30
+    },
+    {
+      "sourcePageNumber": 63,
+      "start": 152.30,
+      "end": 210.0
+    },
+    {
+      "sourcePageNumber": 64,
+      "start": 210.0,
+      "end": 278.10
+    },
+    {
+      "sourcePageNumber": 65,
+      "start": 278.10,
+      "end": 342.80
+    },
+    {
+      "sourcePageNumber": 66,
+      "start": 342.80,
+      "end": 359.0
+    },
+    {
+      "sourcePageNumber": 67,
+      "start": 359.30,
+      "end": 404.21
+    },
+    {
+      "sourcePageNumber": 68,
+      "start": 404.21,
+      "end": 498.0
+    },
+    {
+      "sourcePageNumber": 69,
+      "start": 498.0,
+      "end": 576.46
+    },
+    {
+      "sourcePageNumber": 70,
+      "start": 576.46,
+      "end": 595.0
+    },
+    {
+      "sourcePageNumber": 71,
+      "start": 595.0,
+      "end": 632.92
+    }
+  ]
+}
