@@ -10,7 +10,7 @@
     "start": "node dist/src/index.js",
     "typecheck": "tsc --noEmit",
     "content:fetch": "tsx scripts/fetch-content.ts",
-    "content:prepare": "tsx scripts/prepare-content.ts",
+    "content:prepare": "tsx scripts/prepare-content.ts && tsx scripts/import-hifzun-content.ts",
     "content:import:hifzun": "tsx scripts/import-hifzun-content.ts",
     "content:text:extract": "node scripts/extract-page-text.mjs",
     "audio:template": "tsx scripts/create-audio-timing-template.ts",

@@ -2,7 +2,18 @@
 
 This folder is for manually verified page-level timings.
 
-Workflow:
+- `<book-id>.json` — verified timings used by `npm run content:prepare`.
+- `anchors/<book-id>.json` — the first and last words of every page, read from the page images, plus review
+  notes. They are the reference the timings were found and checked against.
+
+Books with verified timings: `kitab-at-tawhid`, `al-aqidah-al-wasitiyyah`, `kashf-ash-shubuhat`, `al-ilbiri`.
+They were produced with `tools/audio-align` (Whisper transcript + page anchors, every page clip re-checked);
+see `tools/audio-align/README.md` to redo or extend them.
+
+A page normally is one stretch of the recording (`start`–`end`). When the reciter reads a page's text in a
+different order than the printed edition, the page lists `segments` that are played one after another.
+
+Manual workflow for a new book:
 
 1. Generate a draft:
 
