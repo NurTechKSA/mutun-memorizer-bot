@@ -100,7 +100,10 @@ try {
     if (options.download && isDownloadableMedia((message as any).media)) {
       const fileName = buildMediaFileName(message);
       const outputFile = path.join(mediaDir, fileName);
-      if (!fs.existsSync(outputFile)) {
+      // Re-download files left incomplete by an interrupted run (documents carry their size; photos do not).
+      const expectedSize = Number((message as any).media?.document?.size ?? 0);
+      const complete = fs.existsSync(outputFile) && (!expectedSize || fs.statSync(outputFile).size === expectedSize);
+      if (!complete) {
         await client.downloadFile((message as any).media, { outputFile });
       }
       summary.media = {

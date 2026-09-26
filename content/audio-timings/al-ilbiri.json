@@ -1,0 +1,112 @@
+{
+  "bookId": "al-ilbiri",
+  "status": "verified",
+  "notes": [
+    "Page boundaries found by matching the first/last words of every page (anchors/<book-id>.json) against a Whisper large-v3 transcript; the cut is placed in the pause between the two pages.",
+    "Every page clip was then transcribed on its own and checked to start with the page's first words and end with its last words (tools/audio-align/verify.py)."
+  ],
+  "pages": [
+    {
+      "sourcePageNumber": 39,
+      "start": 28.555,
+      "end": 75.79,
+      "note": "Проверено вручную: клип начинается с басмалы (вступление диктора отрезано), бейт 1 звучит на 30.5–40 с; автоматическая проверка его не видит, т.к. Whisper пропускает этот бейт."
+    },
+    {
+      "sourcePageNumber": 40,
+      "start": 75.79,
+      "end": 125.785
+    },
+    {
+      "sourcePageNumber": 41,
+      "start": 125.785,
+      "end": 182.895
+    },
+    {
+      "sourcePageNumber": 42,
+      "start": 182.895,
+      "end": 232.42
+    },
+    {
+      "sourcePageNumber": 43,
+      "start": 232.42,
+      "end": 281.11
+    },
+    {
+      "sourcePageNumber": 44,
+      "start": 281.11,
+      "end": 328.995
+    },
+    {
+      "sourcePageNumber": 45,
+      "start": 328.995,
+      "end": 377.98
+    },
+    {
+      "sourcePageNumber": 46,
+      "start": 377.98,
+      "end": 394.405
+    },
+    {
+      "sourcePageNumber": 47,
+      "start": 394.405,
+      "end": 442.82
+    },
+    {
+      "sourcePageNumber": 48,
+      "start": 442.82,
+      "end": 491.715
+    },
+    {
+      "sourcePageNumber": 49,
+      "start": 491.715,
+      "end": 524.48
+    },
+    {
+      "sourcePageNumber": 50,
+      "start": 524.48,
+      "end": 572.105
+    },
+    {
+      "sourcePageNumber": 51,
+      "start": 572.105,
+      "end": 628.825
+    },
+    {
+      "sourcePageNumber": 52,
+      "start": 628.825,
+      "end": 677.615
+    },
+    {
+      "sourcePageNumber": 53,
+      "start": 677.615,
+      "end": 734.235
+    },
+    {
+      "sourcePageNumber": 54,
+      "start": 734.235,
+      "end": 780.91
+    },
+    {
+      "sourcePageNumber": 55,
+      "start": 780.91,
+      "end": 838.32
+    },
+    {
+      "sourcePageNumber": 56,
+      "start": 838.32,
+      "end": 885.745
+    },
+    {
+      "sourcePageNumber": 57,
+      "start": 885.745,
+      "end": 918.26
+    },
+    {
+      "sourcePageNumber": 58,
+      "start": 918.26,
+      "end": 957.6,
+      "note": "Страница добавлена: бейты 110–113 и «تمت بحمد الله» были за пределами studyRange (PDF 58)."
+    }
+  ]
+}

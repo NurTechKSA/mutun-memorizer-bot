@@ -44,12 +44,17 @@ const hifzunRanges: HifzunBookRange[] = [
   { bookId: "al-bayquniyyah", titleRu: "Аль-Байкуния", titleAr: "منظومة البيقوني", author: "عمر بن محمد البيقوني", from: 1101, to: 1171, titlePrefix: "Байкуния" }
 ];
 
-const mutedAudio = new Set([
-  // Source @hifzun file №71 for "Три основы" is only ~4s while the card is much longer.
-  "al-usul-ath-thalatha:70"
-]);
+// "<book-id>:<chunk index>" of hifzun audio files that must not be shipped.
+// "al-usul-ath-thalatha:70" (card №71) was muted as a ~4 s file; the channel file (message 166) is 19.6 s and
+// matches the card, the local copy was an incomplete download (telegram:hifzun:scan now re-downloads those).
+const mutedAudio = new Set<string>();
 
 const scans = await readScans(importDir);
+if (scans.length === 0) {
+  // content:prepare runs this import right after rendering; without a local Telegram scan there is nothing to import.
+  console.log(`skipped hifzun import: no scans in ${path.relative(process.cwd(), importDir)} (run npm run telegram:hifzun:scan)`);
+  process.exit(0);
+}
 const messages = dedupeMessages(scans.flatMap((scan) => scan.messages)).sort((a, b) => a.id - b.id);
 const catalog = JSON.parse(await fs.readFile(path.join(contentDir, "catalog.json"), "utf8")) as CatalogFile;
 const mediaFiles = await fs.readdir(mediaDir);
@@ -119,7 +124,7 @@ await fs.writeFile(path.join(contentDir, "catalog.json"), `${JSON.stringify(cata
 console.log(`imported hifzun books:\n${imported.map((line) => `- ${line}`).join("\n")}`);
 
 async function readScans(dir: string): Promise<HifzunScan[]> {
-  const files = (await fs.readdir(dir))
+  const files = (await fs.readdir(dir).catch(() => [] as string[]))
     .filter((file) => file.startsWith("scan-") && file.endsWith(".json"))
     .sort();
   return Promise.all(files.map(async (file) => JSON.parse(await fs.readFile(path.join(dir, file), "utf8")) as HifzunScan));

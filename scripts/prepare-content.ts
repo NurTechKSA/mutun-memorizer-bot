@@ -216,14 +216,21 @@ async function splitAudioByPages(
 type AudioTimingFile = {
   bookId: string;
   status: "verified";
-  notes?: string;
+  notes?: string | string[];
   pages: {
     sourcePageNumber: number;
     start: number;
     end: number;
+    // When the recording reads the page's text in a different order than the printed edition, the page is
+    // assembled from several stretches of the source audio, in this order. start/end stay as the outer bounds.
+    segments?: { start: number; end: number }[];
     note?: string;
   }[];
 };
+
+function pageSegments(page: AudioTimingFile["pages"][number]): { start: number; end: number }[] {
+  return page.segments?.length ? page.segments : [{ start: page.start, end: page.end }];
+}
 
 async function readAudioTimingFile(bookId: string): Promise<AudioTimingFile | undefined> {
   const filePath = path.join(audioTimingDir, `${bookId}.json`);
@@ -259,25 +266,51 @@ async function splitAudioByManualTimings(
   for (const page of timing.pages) {
     const outputFileName = `page-${String(page.sourcePageNumber).padStart(3, "0")}.mp3`;
     const outputPath = path.join(audioDir, outputFileName);
+    const segments = pageSegments(page);
 
-    await run(ffmpegPath, [
-      "-y",
-      "-hide_banner",
-      "-loglevel",
-      "error",
-      "-ss",
-      formatSeconds(page.start),
-      "-to",
-      formatSeconds(page.end),
-      "-i",
-      sourceAudioPath,
-      "-vn",
-      "-ac",
-      "1",
-      "-b:a",
-      "96k",
-      outputPath
-    ]);
+    if (segments.length === 1) {
+      await run(ffmpegPath, [
+        "-y",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-ss",
+        formatSeconds(segments[0].start),
+        "-to",
+        formatSeconds(segments[0].end),
+        "-i",
+        sourceAudioPath,
+        "-vn",
+        "-ac",
+        "1",
+        "-b:a",
+        "96k",
+        outputPath
+      ]);
+    } else {
+      const trims = segments.map(
+        (segment, index) =>
+          `[0:a]atrim=start=${formatSeconds(segment.start)}:end=${formatSeconds(segment.end)},asetpts=PTS-STARTPTS[s${index}]`
+      );
+      const inputs = segments.map((_, index) => `[s${index}]`).join("");
+      await run(ffmpegPath, [
+        "-y",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-i",
+        sourceAudioPath,
+        "-filter_complex",
+        `${trims.join(";")};${inputs}concat=n=${segments.length}:v=0:a=1[out]`,
+        "-map",
+        "[out]",
+        "-ac",
+        "1",
+        "-b:a",
+        "96k",
+        outputPath
+      ]);
+    }
 
     paths.push(path.posix.join("prepared", path.basename(path.dirname(audioDir)), "audio", outputFileName));
   }
@@ -300,9 +333,27 @@ function validateManualTimings(bookId: string, expectedPages: number[], timing: 
     if (!Number.isFinite(page.start) || !Number.isFinite(page.end) || page.start < 0 || page.end <= page.start) {
       throw new Error(`${bookId}: invalid timing for source page ${page.sourcePageNumber}`);
     }
-    const previous = timing.pages[index - 1];
-    if (previous && page.start < previous.end - 0.05) {
-      throw new Error(`${bookId}: page ${page.sourcePageNumber} overlaps previous page`);
+    for (const segment of pageSegments(page)) {
+      const valid =
+        Number.isFinite(segment.start) &&
+        Number.isFinite(segment.end) &&
+        segment.end > segment.start &&
+        segment.start >= page.start - 0.001 &&
+        segment.end <= page.end + 0.001;
+      if (!valid) {
+        throw new Error(`${bookId}: invalid audio segment for source page ${page.sourcePageNumber}`);
+      }
+    }
+  }
+
+  // No stretch of the recording may be played on two pages.
+  const segments = timing.pages
+    .flatMap((page) => pageSegments(page).map((segment) => ({ ...segment, page: page.sourcePageNumber })))
+    .sort((a, b) => a.start - b.start);
+  for (const [index, segment] of segments.entries()) {
+    const previous = segments[index - 1];
+    if (previous && segment.start < previous.end - 0.05) {
+      throw new Error(`${bookId}: page ${segment.page} overlaps page ${previous.page}`);
     }
   }
 }

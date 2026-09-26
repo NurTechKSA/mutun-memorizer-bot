@@ -1,0 +1,410 @@
+{
+  "bookId": "kashf-ash-shubuhat",
+  "status": "verified",
+  "notes": [
+    "Page boundaries found by matching the first/last words of every page (anchors/<book-id>.json) against a Whisper large-v3 transcript; the cut is placed in the pause between the two pages.",
+    "Every page clip was then transcribed on its own and checked to start with the page's first words and end with its last words (tools/audio-align/verify.py)."
+  ],
+  "pages": [
+    {
+      "sourcePageNumber": 17,
+      "start": 22.83,
+      "end": 71.95
+    },
+    {
+      "sourcePageNumber": 18,
+      "start": 71.95,
+      "end": 128.545
+    },
+    {
+      "sourcePageNumber": 19,
+      "start": 128.545,
+      "end": 167.79
+    },
+    {
+      "sourcePageNumber": 20,
+      "start": 167.79,
+      "end": 255.225
+    },
+    {
+      "sourcePageNumber": 21,
+      "start": 255.225,
+      "end": 319.22
+    },
+    {
+      "sourcePageNumber": 22,
+      "start": 319.22,
+      "end": 330.915
+    },
+    {
+      "sourcePageNumber": 23,
+      "start": 330.915,
+      "end": 387.915
+    },
+    {
+      "sourcePageNumber": 24,
+      "start": 387.915,
+      "end": 447.065
+    },
+    {
+      "sourcePageNumber": 25,
+      "start": 447.065,
+      "end": 523.075
+    },
+    {
+      "sourcePageNumber": 26,
+      "start": 523.075,
+      "end": 583.76
+    },
+    {
+      "sourcePageNumber": 27,
+      "start": 583.76,
+      "end": 619.31
+    },
+    {
+      "sourcePageNumber": 28,
+      "start": 619.31,
+      "end": 663.77
+    },
+    {
+      "sourcePageNumber": 29,
+      "start": 663.77,
+      "end": 728.52
+    },
+    {
+      "sourcePageNumber": 30,
+      "start": 728.52,
+      "end": 789.17
+    },
+    {
+      "sourcePageNumber": 31,
+      "start": 789.17,
+      "end": 855.88
+    },
+    {
+      "sourcePageNumber": 32,
+      "start": 855.88,
+      "end": 908.305
+    },
+    {
+      "sourcePageNumber": 33,
+      "start": 908.305,
+      "end": 979.94
+    },
+    {
+      "sourcePageNumber": 34,
+      "start": 979.94,
+      "end": 1000.51
+    },
+    {
+      "sourcePageNumber": 35,
+      "start": 1000.51,
+      "end": 1062.84
+    },
+    {
+      "sourcePageNumber": 36,
+      "start": 1062.84,
+      "end": 1090.08
+    },
+    {
+      "sourcePageNumber": 37,
+      "start": 1090.08,
+      "end": 1141.7
+    },
+    {
+      "sourcePageNumber": 38,
+      "start": 1141.7,
+      "end": 1211.11
+    },
+    {
+      "sourcePageNumber": 39,
+      "start": 1211.11,
+      "end": 1239.855
+    },
+    {
+      "sourcePageNumber": 40,
+      "start": 1239.855,
+      "end": 1291.895
+    },
+    {
+      "sourcePageNumber": 41,
+      "start": 1291.895,
+      "end": 1310.495
+    },
+    {
+      "sourcePageNumber": 42,
+      "start": 1310.495,
+      "end": 1350.315
+    },
+    {
+      "sourcePageNumber": 43,
+      "start": 1350.315,
+      "end": 1400.215
+    },
+    {
+      "sourcePageNumber": 44,
+      "start": 1400.215,
+      "end": 1432.11
+    },
+    {
+      "sourcePageNumber": 45,
+      "start": 1432.11,
+      "end": 1480.76
+    },
+    {
+      "sourcePageNumber": 46,
+      "start": 1480.76,
+      "end": 1543.55
+    },
+    {
+      "sourcePageNumber": 47,
+      "start": 1543.55,
+      "end": 1592.005
+    },
+    {
+      "sourcePageNumber": 48,
+      "start": 1592.005,
+      "end": 1649.035
+    },
+    {
+      "sourcePageNumber": 49,
+      "start": 1649.035,
+      "end": 1692.295
+    },
+    {
+      "sourcePageNumber": 50,
+      "start": 1692.295,
+      "end": 1739.035
+    },
+    {
+      "sourcePageNumber": 51,
+      "start": 1739.035,
+      "end": 1755.93
+    },
+    {
+      "sourcePageNumber": 52,
+      "start": 1755.93,
+      "end": 1799.27
+    },
+    {
+      "sourcePageNumber": 53,
+      "start": 1799.27,
+      "end": 1830.475
+    },
+    {
+      "sourcePageNumber": 54,
+      "start": 1830.475,
+      "end": 1875.8
+    },
+    {
+      "sourcePageNumber": 55,
+      "start": 1875.8,
+      "end": 1923.62
+    },
+    {
+      "sourcePageNumber": 56,
+      "start": 1923.62,
+      "end": 1965.5
+    },
+    {
+      "sourcePageNumber": 57,
+      "start": 1965.5,
+      "end": 2026.695
+    },
+    {
+      "sourcePageNumber": 58,
+      "start": 2026.695,
+      "end": 2102.17
+    },
+    {
+      "sourcePageNumber": 59,
+      "start": 2102.17,
+      "end": 2160.69
+    },
+    {
+      "sourcePageNumber": 60,
+      "start": 2160.69,
+      "end": 2194.07
+    },
+    {
+      "sourcePageNumber": 61,
+      "start": 2194.07,
+      "end": 2250.15
+    },
+    {
+      "sourcePageNumber": 62,
+      "start": 2250.15,
+      "end": 2271.465
+    },
+    {
+      "sourcePageNumber": 63,
+      "start": 2271.465,
+      "end": 2313.52
+    },
+    {
+      "sourcePageNumber": 64,
+      "start": 2313.52,
+      "end": 2386.28
+    },
+    {
+      "sourcePageNumber": 65,
+      "start": 2386.28,
+      "end": 2403.56
+    },
+    {
+      "sourcePageNumber": 66,
+      "start": 2403.56,
+      "end": 2453.31
+    },
+    {
+      "sourcePageNumber": 67,
+      "start": 2453.31,
+      "end": 2481.915
+    },
+    {
+      "sourcePageNumber": 68,
+      "start": 2481.915,
+      "end": 2536.3
+    },
+    {
+      "sourcePageNumber": 69,
+      "start": 2536.3,
+      "end": 2555.61
+    },
+    {
+      "sourcePageNumber": 70,
+      "start": 2555.61,
+      "end": 2607.405
+    },
+    {
+      "sourcePageNumber": 71,
+      "start": 2607.405,
+      "end": 2657.53
+    },
+    {
+      "sourcePageNumber": 72,
+      "start": 2657.53,
+      "end": 2714.445
+    },
+    {
+      "sourcePageNumber": 73,
+      "start": 2714.445,
+      "end": 2787.57
+    },
+    {
+      "sourcePageNumber": 74,
+      "start": 2787.57,
+      "end": 2810.68
+    },
+    {
+      "sourcePageNumber": 75,
+      "start": 2810.68,
+      "end": 2832.97
+    },
+    {
+      "sourcePageNumber": 76,
+      "start": 2832.97,
+      "end": 2858.415
+    },
+    {
+      "sourcePageNumber": 77,
+      "start": 2858.415,
+      "end": 2909.27
+    },
+    {
+      "sourcePageNumber": 78,
+      "start": 2909.27,
+      "end": 2968.23
+    },
+    {
+      "sourcePageNumber": 79,
+      "start": 2968.23,
+      "end": 2992.445
+    },
+    {
+      "sourcePageNumber": 80,
+      "start": 2992.445,
+      "end": 3062.985
+    },
+    {
+      "sourcePageNumber": 81,
+      "start": 3062.985,
+      "end": 3119.895
+    },
+    {
+      "sourcePageNumber": 82,
+      "start": 3119.895,
+      "end": 3182.37
+    },
+    {
+      "sourcePageNumber": 83,
+      "start": 3182.37,
+      "end": 3211.635
+    },
+    {
+      "sourcePageNumber": 84,
+      "start": 3211.635,
+      "end": 3282.76
+    },
+    {
+      "sourcePageNumber": 85,
+      "start": 3282.76,
+      "end": 3339.14
+    },
+    {
+      "sourcePageNumber": 86,
+      "start": 3339.14,
+      "end": 3394.78
+    },
+    {
+      "sourcePageNumber": 87,
+      "start": 3394.78,
+      "end": 3448.88
+    },
+    {
+      "sourcePageNumber": 88,
+      "start": 3448.88,
+      "end": 3488.665
+    },
+    {
+      "sourcePageNumber": 89,
+      "start": 3488.665,
+      "end": 3550.5
+    },
+    {
+      "sourcePageNumber": 90,
+      "start": 3550.5,
+      "end": 3599.775
+    },
+    {
+      "sourcePageNumber": 91,
+      "start": 3599.775,
+      "end": 3659.92
+    },
+    {
+      "sourcePageNumber": 92,
+      "start": 3659.92,
+      "end": 3729.17
+    },
+    {
+      "sourcePageNumber": 93,
+      "start": 3729.17,
+      "end": 3755.445
+    },
+    {
+      "sourcePageNumber": 94,
+      "start": 3755.445,
+      "end": 3834.82
+    },
+    {
+      "sourcePageNumber": 95,
+      "start": 3834.82,
+      "end": 3883.64
+    },
+    {
+      "sourcePageNumber": 96,
+      "start": 3883.64,
+      "end": 3947.781
+    }
+  ]
+}

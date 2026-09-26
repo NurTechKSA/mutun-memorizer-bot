@@ -1,0 +1,4 @@
+openai-whisper==20250625
+numpy>=2
+pillow>=11
+rapidfuzz>=3.14

@@ -1,0 +1,786 @@
+{
+  "bookId": "kitab-at-tawhid",
+  "status": "verified",
+  "notes": [
+    "Page boundaries found by matching the first/last words of every page (anchors/<book-id>.json) against a Whisper large-v3 transcript; the cut is placed in the pause between the two pages.",
+    "Every page clip was then transcribed on its own and checked to start with the page's first words and end with its last words (tools/audio-align/verify.py)."
+  ],
+  "pages": [
+    {
+      "sourcePageNumber": 85,
+      "start": 14.265,
+      "end": 65.725,
+      "segments": [
+        {
+          "start": 14.265,
+          "end": 34.45
+        },
+        {
+          "start": 49.3,
+          "end": 65.725
+        }
+      ],
+      "note": "Чтец читает «قل تعالوا…» (первый аят стр. 86) между «ولقد بعثنا» и «وقضى ربك»; аудио страницы собрано из двух отрезков, чтобы порядок совпадал с изданием."
+    },
+    {
+      "sourcePageNumber": 86,
+      "start": 34.45,
+      "end": 106.32,
+      "segments": [
+        {
+          "start": 34.45,
+          "end": 49.3
+        },
+        {
+          "start": 65.725,
+          "end": 106.32
+        }
+      ],
+      "note": "Первый аят страницы («قل تعالوا…», 34.45–49.3 с) чтец читает раньше, внутри стр. 85; аудио страницы собрано из двух отрезков."
+    },
+    {
+      "sourcePageNumber": 87,
+      "start": 106.32,
+      "end": 131.475
+    },
+    {
+      "sourcePageNumber": 88,
+      "start": 131.475,
+      "end": 176.535
+    },
+    {
+      "sourcePageNumber": 89,
+      "start": 176.535,
+      "end": 225.375
+    },
+    {
+      "sourcePageNumber": 90,
+      "start": 225.375,
+      "end": 250.56
+    },
+    {
+      "sourcePageNumber": 91,
+      "start": 250.56,
+      "end": 289.51
+    },
+    {
+      "sourcePageNumber": 92,
+      "start": 289.51,
+      "end": 334.695
+    },
+    {
+      "sourcePageNumber": 93,
+      "start": 334.695,
+      "end": 381.855
+    },
+    {
+      "sourcePageNumber": 94,
+      "start": 381.855,
+      "end": 400.675
+    },
+    {
+      "sourcePageNumber": 95,
+      "start": 400.675,
+      "end": 435.705
+    },
+    {
+      "sourcePageNumber": 96,
+      "start": 435.705,
+      "end": 453.65
+    },
+    {
+      "sourcePageNumber": 97,
+      "start": 453.65,
+      "end": 498.97
+    },
+    {
+      "sourcePageNumber": 98,
+      "start": 498.97,
+      "end": 545.825
+    },
+    {
+      "sourcePageNumber": 99,
+      "start": 545.825,
+      "end": 592.755
+    },
+    {
+      "sourcePageNumber": 100,
+      "start": 592.755,
+      "end": 642.825
+    },
+    {
+      "sourcePageNumber": 101,
+      "start": 642.825,
+      "end": 664.365
+    },
+    {
+      "sourcePageNumber": 102,
+      "start": 664.365,
+      "end": 710.345
+    },
+    {
+      "sourcePageNumber": 103,
+      "start": 710.345,
+      "end": 748.225,
+      "note": "Чтец добавляет в конце «رواه ابن أبي حاتم» — в этом издании этих слов нет."
+    },
+    {
+      "sourcePageNumber": 104,
+      "start": 748.225,
+      "end": 795.835
+    },
+    {
+      "sourcePageNumber": 105,
+      "start": 795.835,
+      "end": 847.92
+    },
+    {
+      "sourcePageNumber": 106,
+      "start": 847.92,
+      "end": 876.72
+    },
+    {
+      "sourcePageNumber": 107,
+      "start": 876.72,
+      "end": 928.14
+    },
+    {
+      "sourcePageNumber": 108,
+      "start": 928.14,
+      "end": 945.425
+    },
+    {
+      "sourcePageNumber": 109,
+      "start": 945.425,
+      "end": 986.72
+    },
+    {
+      "sourcePageNumber": 110,
+      "start": 986.72,
+      "end": 1037.93
+    },
+    {
+      "sourcePageNumber": 111,
+      "start": 1037.93,
+      "end": 1091.14
+    },
+    {
+      "sourcePageNumber": 112,
+      "start": 1091.14,
+      "end": 1122.53
+    },
+    {
+      "sourcePageNumber": 113,
+      "start": 1122.53,
+      "end": 1160.32
+    },
+    {
+      "sourcePageNumber": 114,
+      "start": 1160.32,
+      "end": 1203.125
+    },
+    {
+      "sourcePageNumber": 115,
+      "start": 1203.125,
+      "end": 1237.46
+    },
+    {
+      "sourcePageNumber": 116,
+      "start": 1237.46,
+      "end": 1288.9
+    },
+    {
+      "sourcePageNumber": 117,
+      "start": 1288.9,
+      "end": 1341.99,
+      "note": "Чтец произносит «فلانا» трижды (в издании дважды); речь на стыке слитная, граница выставлена вручную на начало первого «فلانا» (1288.90 с)."
+    },
+    {
+      "sourcePageNumber": 118,
+      "start": 1341.99,
+      "end": 1357.05
+    },
+    {
+      "sourcePageNumber": 119,
+      "start": 1357.05,
+      "end": 1411.53
+    },
+    {
+      "sourcePageNumber": 120,
+      "start": 1411.53,
+      "end": 1466.26
+    },
+    {
+      "sourcePageNumber": 121,
+      "start": 1466.26,
+      "end": 1508.275
+    },
+    {
+      "sourcePageNumber": 122,
+      "start": 1508.275,
+      "end": 1574.635
+    },
+    {
+      "sourcePageNumber": 123,
+      "start": 1574.635,
+      "end": 1625.37
+    },
+    {
+      "sourcePageNumber": 124,
+      "start": 1625.37,
+      "end": 1682.06
+    },
+    {
+      "sourcePageNumber": 125,
+      "start": 1682.06,
+      "end": 1734.41
+    },
+    {
+      "sourcePageNumber": 126,
+      "start": 1734.41,
+      "end": 1764.665
+    },
+    {
+      "sourcePageNumber": 127,
+      "start": 1764.665,
+      "end": 1812.39
+    },
+    {
+      "sourcePageNumber": 128,
+      "start": 1812.39,
+      "end": 1862.89
+    },
+    {
+      "sourcePageNumber": 129,
+      "start": 1862.89,
+      "end": 1875.715
+    },
+    {
+      "sourcePageNumber": 130,
+      "start": 1875.715,
+      "end": 1919.425
+    },
+    {
+      "sourcePageNumber": 131,
+      "start": 1919.425,
+      "end": 1981.505
+    },
+    {
+      "sourcePageNumber": 132,
+      "start": 1981.505,
+      "end": 2032.745
+    },
+    {
+      "sourcePageNumber": 133,
+      "start": 2032.745,
+      "end": 2051.74
+    },
+    {
+      "sourcePageNumber": 134,
+      "start": 2051.74,
+      "end": 2089.865
+    },
+    {
+      "sourcePageNumber": 135,
+      "start": 2089.865,
+      "end": 2114.45
+    },
+    {
+      "sourcePageNumber": 136,
+      "start": 2114.45,
+      "end": 2160.205
+    },
+    {
+      "sourcePageNumber": 137,
+      "start": 2160.205,
+      "end": 2194.03
+    },
+    {
+      "sourcePageNumber": 138,
+      "start": 2194.03,
+      "end": 2248.44
+    },
+    {
+      "sourcePageNumber": 139,
+      "start": 2248.44,
+      "end": 2305.62
+    },
+    {
+      "sourcePageNumber": 140,
+      "start": 2305.62,
+      "end": 2354.775
+    },
+    {
+      "sourcePageNumber": 141,
+      "start": 2354.775,
+      "end": 2367.455
+    },
+    {
+      "sourcePageNumber": 142,
+      "start": 2367.455,
+      "end": 2406.515
+    },
+    {
+      "sourcePageNumber": 143,
+      "start": 2406.515,
+      "end": 2434.4
+    },
+    {
+      "sourcePageNumber": 144,
+      "start": 2434.4,
+      "end": 2466.18
+    },
+    {
+      "sourcePageNumber": 145,
+      "start": 2466.18,
+      "end": 2503.76
+    },
+    {
+      "sourcePageNumber": 146,
+      "start": 2503.76,
+      "end": 2565.845
+    },
+    {
+      "sourcePageNumber": 147,
+      "start": 2565.845,
+      "end": 2612.64
+    },
+    {
+      "sourcePageNumber": 148,
+      "start": 2612.64,
+      "end": 2657.84
+    },
+    {
+      "sourcePageNumber": 149,
+      "start": 2657.84,
+      "end": 2704.4
+    },
+    {
+      "sourcePageNumber": 150,
+      "start": 2704.4,
+      "end": 2745.28
+    },
+    {
+      "sourcePageNumber": 151,
+      "start": 2745.28,
+      "end": 2782.095
+    },
+    {
+      "sourcePageNumber": 152,
+      "start": 2782.095,
+      "end": 2829.68
+    },
+    {
+      "sourcePageNumber": 153,
+      "start": 2829.68,
+      "end": 2881.97
+    },
+    {
+      "sourcePageNumber": 154,
+      "start": 2881.97,
+      "end": 2911.125
+    },
+    {
+      "sourcePageNumber": 155,
+      "start": 2911.125,
+      "end": 2950.615
+    },
+    {
+      "sourcePageNumber": 156,
+      "start": 2950.615,
+      "end": 2969.41
+    },
+    {
+      "sourcePageNumber": 157,
+      "start": 2969.41,
+      "end": 3011.115
+    },
+    {
+      "sourcePageNumber": 158,
+      "start": 3011.115,
+      "end": 3056.54
+    },
+    {
+      "sourcePageNumber": 159,
+      "start": 3056.54,
+      "end": 3078.005
+    },
+    {
+      "sourcePageNumber": 160,
+      "start": 3078.005,
+      "end": 3133.885
+    },
+    {
+      "sourcePageNumber": 161,
+      "start": 3133.885,
+      "end": 3186.755
+    },
+    {
+      "sourcePageNumber": 162,
+      "start": 3186.755,
+      "end": 3194.335
+    },
+    {
+      "sourcePageNumber": 163,
+      "start": 3194.335,
+      "end": 3249.7
+    },
+    {
+      "sourcePageNumber": 164,
+      "start": 3249.7,
+      "end": 3282.265
+    },
+    {
+      "sourcePageNumber": 165,
+      "start": 3282.265,
+      "end": 3337.36,
+      "note": "Чтец читает «فزادهم إيمانا الآية رواه البخاري» вместо «…وقالوا حسبنا الله ونعم الوكيل» — разница изданий, граница страниц не затронута."
+    },
+    {
+      "sourcePageNumber": 166,
+      "start": 3337.36,
+      "end": 3386.13
+    },
+    {
+      "sourcePageNumber": 167,
+      "start": 3386.13,
+      "end": 3431.77
+    },
+    {
+      "sourcePageNumber": 168,
+      "start": 3431.77,
+      "end": 3471.725
+    },
+    {
+      "sourcePageNumber": 169,
+      "start": 3471.725,
+      "end": 3515.79
+    },
+    {
+      "sourcePageNumber": 170,
+      "start": 3515.79,
+      "end": 3526.57
+    },
+    {
+      "sourcePageNumber": 171,
+      "start": 3526.57,
+      "end": 3574.375
+    },
+    {
+      "sourcePageNumber": 172,
+      "start": 3574.375,
+      "end": 3586.635
+    },
+    {
+      "sourcePageNumber": 173,
+      "start": 3586.635,
+      "end": 3628.67
+    },
+    {
+      "sourcePageNumber": 174,
+      "start": 3628.67,
+      "end": 3676.525
+    },
+    {
+      "sourcePageNumber": 175,
+      "start": 3676.525,
+      "end": 3729.21
+    },
+    {
+      "sourcePageNumber": 176,
+      "start": 3729.21,
+      "end": 3777.775
+    },
+    {
+      "sourcePageNumber": 177,
+      "start": 3777.775,
+      "end": 3809.93
+    },
+    {
+      "sourcePageNumber": 178,
+      "start": 3809.93,
+      "end": 3857.765
+    },
+    {
+      "sourcePageNumber": 179,
+      "start": 3857.765,
+      "end": 3871.33
+    },
+    {
+      "sourcePageNumber": 180,
+      "start": 3871.33,
+      "end": 3909.81
+    },
+    {
+      "sourcePageNumber": 181,
+      "start": 3909.81,
+      "end": 3932.665
+    },
+    {
+      "sourcePageNumber": 182,
+      "start": 3932.665,
+      "end": 3979.135
+    },
+    {
+      "sourcePageNumber": 183,
+      "start": 3979.135,
+      "end": 4029.085
+    },
+    {
+      "sourcePageNumber": 184,
+      "start": 4029.085,
+      "end": 4040.07
+    },
+    {
+      "sourcePageNumber": 185,
+      "start": 4040.07,
+      "end": 4066.075
+    },
+    {
+      "sourcePageNumber": 186,
+      "start": 4066.075,
+      "end": 4113.505
+    },
+    {
+      "sourcePageNumber": 187,
+      "start": 4113.505,
+      "end": 4157.42
+    },
+    {
+      "sourcePageNumber": 188,
+      "start": 4157.42,
+      "end": 4192.14
+    },
+    {
+      "sourcePageNumber": 189,
+      "start": 4192.14,
+      "end": 4226.115
+    },
+    {
+      "sourcePageNumber": 190,
+      "start": 4226.115,
+      "end": 4258.04
+    },
+    {
+      "sourcePageNumber": 191,
+      "start": 4258.04,
+      "end": 4293.535
+    },
+    {
+      "sourcePageNumber": 192,
+      "start": 4293.535,
+      "end": 4303.23
+    },
+    {
+      "sourcePageNumber": 193,
+      "start": 4303.23,
+      "end": 4357.305
+    },
+    {
+      "sourcePageNumber": 194,
+      "start": 4357.305,
+      "end": 4426.99
+    },
+    {
+      "sourcePageNumber": 195,
+      "start": 4426.99,
+      "end": 4468.86
+    },
+    {
+      "sourcePageNumber": 196,
+      "start": 4468.86,
+      "end": 4519.225
+    },
+    {
+      "sourcePageNumber": 197,
+      "start": 4519.225,
+      "end": 4559.965
+    },
+    {
+      "sourcePageNumber": 198,
+      "start": 4559.965,
+      "end": 4614.81
+    },
+    {
+      "sourcePageNumber": 199,
+      "start": 4614.81,
+      "end": 4664.155
+    },
+    {
+      "sourcePageNumber": 200,
+      "start": 4664.155,
+      "end": 4687.615
+    },
+    {
+      "sourcePageNumber": 201,
+      "start": 4687.615,
+      "end": 4745.17
+    },
+    {
+      "sourcePageNumber": 202,
+      "start": 4745.17,
+      "end": 4795.29
+    },
+    {
+      "sourcePageNumber": 203,
+      "start": 4795.29,
+      "end": 4827.565
+    },
+    {
+      "sourcePageNumber": 204,
+      "start": 4827.565,
+      "end": 4856.59
+    },
+    {
+      "sourcePageNumber": 205,
+      "start": 4856.59,
+      "end": 4888.65
+    },
+    {
+      "sourcePageNumber": 206,
+      "start": 4888.65,
+      "end": 4915.785
+    },
+    {
+      "sourcePageNumber": 207,
+      "start": 4915.785,
+      "end": 4950.37
+    },
+    {
+      "sourcePageNumber": 208,
+      "start": 4950.37,
+      "end": 4966.52
+    },
+    {
+      "sourcePageNumber": 209,
+      "start": 4966.52,
+      "end": 5012.49
+    },
+    {
+      "sourcePageNumber": 210,
+      "start": 5012.49,
+      "end": 5045.325
+    },
+    {
+      "sourcePageNumber": 211,
+      "start": 5045.325,
+      "end": 5090.84
+    },
+    {
+      "sourcePageNumber": 212,
+      "start": 5090.84,
+      "end": 5148.975
+    },
+    {
+      "sourcePageNumber": 213,
+      "start": 5148.975,
+      "end": 5200.625
+    },
+    {
+      "sourcePageNumber": 214,
+      "start": 5200.625,
+      "end": 5245.39
+    },
+    {
+      "sourcePageNumber": 215,
+      "start": 5245.39,
+      "end": 5303.61
+    },
+    {
+      "sourcePageNumber": 216,
+      "start": 5303.61,
+      "end": 5355.225
+    },
+    {
+      "sourcePageNumber": 217,
+      "start": 5355.225,
+      "end": 5408.32
+    },
+    {
+      "sourcePageNumber": 218,
+      "start": 5408.32,
+      "end": 5438.775
+    },
+    {
+      "sourcePageNumber": 219,
+      "start": 5438.775,
+      "end": 5487.94
+    },
+    {
+      "sourcePageNumber": 220,
+      "start": 5487.94,
+      "end": 5543.21
+    },
+    {
+      "sourcePageNumber": 221,
+      "start": 5543.21,
+      "end": 5594.465
+    },
+    {
+      "sourcePageNumber": 222,
+      "start": 5594.465,
+      "end": 5638.4
+    },
+    {
+      "sourcePageNumber": 223,
+      "start": 5638.4,
+      "end": 5685.505
+    },
+    {
+      "sourcePageNumber": 224,
+      "start": 5685.505,
+      "end": 5724.67
+    },
+    {
+      "sourcePageNumber": 225,
+      "start": 5724.67,
+      "end": 5772.19
+    },
+    {
+      "sourcePageNumber": 226,
+      "start": 5772.19,
+      "end": 5778.815
+    },
+    {
+      "sourcePageNumber": 227,
+      "start": 5778.815,
+      "end": 5826.795
+    },
+    {
+      "sourcePageNumber": 228,
+      "start": 5826.795,
+      "end": 5847.16
+    },
+    {
+      "sourcePageNumber": 229,
+      "start": 5847.16,
+      "end": 5894.7
+    },
+    {
+      "sourcePageNumber": 230,
+      "start": 5894.7,
+      "end": 5947.535
+    },
+    {
+      "sourcePageNumber": 231,
+      "start": 5947.535,
+      "end": 6006.085
+    },
+    {
+      "sourcePageNumber": 232,
+      "start": 6006.085,
+      "end": 6053.76
+    },
+    {
+      "sourcePageNumber": 233,
+      "start": 6053.76,
+      "end": 6101.3
+    },
+    {
+      "sourcePageNumber": 234,
+      "start": 6101.3,
+      "end": 6109.195,
+      "note": "Перед «تم بحمد الله» чтец говорит «والله سبحانه وتعالى أعلم» — оставлено на последней странице."
+    }
+  ]
+}
