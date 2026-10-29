@@ -15,7 +15,7 @@ const { values } = parseArgs({
   },
 });
 
-const project = values.project || 'mutun-memorizer-bot';
+const project = values.project || 'hifz';
 const title = values.title || 'Короткий заголовок обновления';
 const timezone = process.env.UPDATEDESK_TIMEZONE || Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Bishkek';
 const today = new Intl.DateTimeFormat('sv-SE', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());

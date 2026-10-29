@@ -1,64 +1,30 @@
-# UpdateDesk Release Cards
+# Карточки релизов (UpdateDesk)
 
-This repository is connected to UpdateDesk.
+Проект в CRM: **`hifz`** — это значение поля `project` в каждой карточке.
 
-## How To Work
+Карточки в `.updatedesk/releases/` — понятная людям история изменений продукта: что и когда поменялось для
+пользователей и команды. По ним в любой момент восстанавливается история, а CRM (crm.nurtech.dev → Разработка →
+Соцсети) сама читает карточки из GitHub и пишет посты в Telegram-канал и Instagram проекта. Первые 14 дней канала
+пост выходит только после одобрения владельцем.
 
-1. Make the product change.
-2. Run relevant checks and keep the command names.
-3. Capture screenshots when UI changed.
-4. Create a release card in `.updatedesk/releases/`.
-5. Commit the release card together with the code change.
-6. Mention the release card path in the commit body when possible.
-7. Push the branch. UpdateDesk will also receive GitHub webhook events.
-8. Review the generated draft in UpdateDesk and publish it to the linked Telegram channel.
+Сайт updates.nurtech.dev выключен 29.10.2026 — вебхуки на него не ставить. Правило для всех проектов —
+`~/.claude/rules/updatedesk.md`.
 
-After every user-visible change, Claude/Codex should create a release card:
+## Когда писать
 
-```txt
-.updatedesk/releases/YYYY-MM-DD-project-short-title.md
-```
+- Одна карточка на одно заметное изменение (а не на коммит): новая функция, исправление, которое заметит
+  пользователь или админ, дизайн, скорость, заметный текст. Связанные правки — в одну карточку.
+- Внутренние правки (рефакторинг, тесты, инструменты, выкладка) — без карточки; если важно для истории, но не для
+  постов — карточка с `public: false`.
+- Коммить карточку вместе с изменением.
 
-Create a card:
+## Файл
 
-```bash
-npm run updatedesk:note -- --project mutun-memorizer-bot --title "Что изменилось"
-```
-
-GitHub webhook:
-
-```txt
-https://updates.nurtech.dev/api/webhooks/github
-```
-
-Repository in UpdateDesk:
-
-```txt
-NurTechKSA/mutun-memorizer-bot
-```
-
-## GitHub Webhook
-
-Add this webhook in GitHub repository settings:
-
-- Payload URL: `https://updates.nurtech.dev/api/webhooks/github`
-- Content type: `application/json`
-- Secret: the same value as `GITHUB_WEBHOOK_SECRET` on `updates.nurtech.dev`
-- Events: `push`, `pull_request`, `release`, `deployment`, `deployment_status`
-
-## Commit Body Marker
-
-```txt
-UpdateDesk:
-release-card: .updatedesk/releases/YYYY-MM-DD-project-short-title.md
-public: true
-```
-
-## Card Format
+`.updatedesk/releases/YYYY-MM-DD-hifz-коротко.md`
 
 ```md
 ---
-project: mutun-memorizer-bot
+project: hifz
 public: true
 type: feature
 audience: users
@@ -67,7 +33,7 @@ summary: Одно-два предложения о результате для �
 user_impact:
   - Конкретный эффект для пользователя.
 screenshots:
-  - artifacts/screens/example-desktop.png
+  - artifacts/screens/example.png
 checks:
   - npm test
 deploy_url: https://...
@@ -79,15 +45,18 @@ Notes for editor:
 - Risks:
 ```
 
-## Fields
+- `public`: `true` — можно писать пост, `false` — только история.
+- `type`: `feature`, `fix`, `design`, `performance`, `release`, `docs`, `internal`.
+- `audience`: `users`, `admins`, `team` или свой сегмент.
+- `summary` и `user_impact` — для пользователя, не пересказ диффа.
+- `screenshots` — пути в репозитории или публичные ссылки, если менялся интерфейс.
+- `checks` — команды и ручные проверки, которые прошли.
+- `backfilled: true` — карточка восстановлена задним числом по `git log`; CRM не делает из неё пост.
 
-- `project`: UpdateDesk project slug.
-- `public`: `true` for Telegram-ready updates, `false` for internal work.
-- `type`: `feature`, `fix`, `design`, `performance`, `release`, `docs`, or `internal`.
-- `audience`: `users`, `admins`, `team`, or a custom segment.
-- `title`: short public title.
-- `summary`: clear user-facing summary.
-- `user_impact`: concrete effects for the user.
-- `screenshots`: local paths or public URLs when UI changed.
-- `checks`: commands or manual checks that passed.
-- `deploy_url`: where the result can be verified.
+## Тело коммита
+
+```txt
+UpdateDesk:
+release-card: .updatedesk/releases/YYYY-MM-DD-hifz-коротко.md
+public: true
+```

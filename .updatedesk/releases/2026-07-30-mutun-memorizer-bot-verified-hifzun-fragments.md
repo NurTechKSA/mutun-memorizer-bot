@@ -1,5 +1,5 @@
 ---
-project: mutun-memorizer-bot
+project: hifz
 public: true
 type: fix
 audience: users
