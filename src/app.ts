@@ -53,14 +53,14 @@ export async function handleAppRequest(
 
   if (!url.pathname.startsWith("/api/app")) return false;
 
-  const auth = authenticateTelegram(request, config);
-  if (!auth) {
-    sendJson(response, 401, {
-      ok: false,
-      error: "Открой кабинет из Telegram-бота, чтобы я понял, чей это прогресс."
-    });
+  const check = authenticateTelegram(request, config);
+  if (!check.user) {
+    sendJson(response, 401, check.error === "init_data_expired"
+      ? { ok: false, error_code: "init_data_expired", error: "Кабинет открыт слишком давно. Переоткрой кабинет из бота." }
+      : { ok: false, error: "Открой кабинет из Telegram-бота, чтобы я понял, чей это прогресс." });
     return true;
   }
+  const auth = check.user;
 
   const body = request.method === "POST" ? await readBody(request) : {};
 
@@ -602,36 +602,55 @@ async function serveContent(urlPath: string, response: http.ServerResponse, conf
   }
 }
 
-function authenticateTelegram(request: http.IncomingMessage, config: AppConfig): AuthUser | undefined {
-  const rawHeader = request.headers["x-telegram-init-data"];
-  const initData = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
-  if (!initData) return undefined;
+type InitDataCheck = { user?: AuthUser; error?: "invalid" | "init_data_expired" };
 
+// Срок действия initData: перехваченная строка (логи, DevTools, прокси) не должна
+// давать доступ к прогрессу навсегда. auth_date старше maxAgeSeconds или больше чем
+// на 5 минут в будущем — init_data_expired, кабинет просит переоткрыть его из бота.
+export function verifyInitData(
+  initData: string,
+  botToken: string,
+  maxAgeSeconds: number,
+  nowSeconds = Math.floor(Date.now() / 1000)
+): InitDataCheck {
+  if (!initData) return { error: "invalid" };
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
   const userRaw = params.get("user");
-  if (!hash || !userRaw) return undefined;
+  if (!hash || !userRaw) return { error: "invalid" };
 
   const dataCheckString = [...params.entries()]
     .filter(([key]) => key !== "hash")
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join("\n");
-  const secret = crypto.createHmac("sha256", "WebAppData").update(config.botToken).digest();
+  const secret = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
   const calculated = crypto.createHmac("sha256", secret).update(dataCheckString).digest("hex");
 
   const calculatedBuffer = Buffer.from(calculated, "hex");
   const hashBuffer = Buffer.from(hash, "hex");
-  if (calculatedBuffer.length !== hashBuffer.length) return undefined;
-  if (!crypto.timingSafeEqual(calculatedBuffer, hashBuffer)) return undefined;
+  if (calculatedBuffer.length !== hashBuffer.length) return { error: "invalid" };
+  if (!crypto.timingSafeEqual(calculatedBuffer, hashBuffer)) return { error: "invalid" };
+
+  const authDate = Number(params.get("auth_date"));
+  const age = nowSeconds - authDate;
+  if (!Number.isFinite(authDate) || authDate <= 0 || age > maxAgeSeconds || age < -300) {
+    return { error: "init_data_expired" };
+  }
 
   try {
     const user = JSON.parse(userRaw) as { id?: number; first_name?: string; username?: string };
-    if (!user.id) return undefined;
-    return { chatId: user.id, firstName: user.first_name, username: user.username };
+    if (!user.id) return { error: "invalid" };
+    return { user: { chatId: user.id, firstName: user.first_name, username: user.username } };
   } catch {
-    return undefined;
+    return { error: "invalid" };
   }
+}
+
+function authenticateTelegram(request: http.IncomingMessage, config: AppConfig): InitDataCheck {
+  const rawHeader = request.headers["x-telegram-init-data"];
+  const initData = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
+  return verifyInitData(initData ?? "", config.botToken, config.initDataMaxAgeSeconds);
 }
 
 function readBody(request: http.IncomingMessage): Promise<RequestBody> {

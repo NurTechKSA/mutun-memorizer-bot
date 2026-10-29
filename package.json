@@ -18,7 +18,8 @@
     "telegram:hifzun:scan": "tsx scripts/hifzun-scan.ts",
     "state:migrate-trimmed-pages": "tsx scripts/migrate-trimmed-page-indexes.ts",
     "updatedesk:init": "node tools/updatedesk-init.mjs",
-    "updatedesk:note": "node tools/updatedesk-note.mjs"
+    "updatedesk:note": "node tools/updatedesk-note.mjs",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "keywords": [
     "telegram",
